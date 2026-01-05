@@ -56,6 +56,7 @@ Custom skills for Claude Code automation.
 | `committing-changes` | Create git commits following Conventional Commits with Jira integration |
 | `creating-branch-from-jira` | Create git feature branches from Jira tickets |
 | `creating-pull-request` | Create GitHub pull requests with Jira ticket integration |
+| `creating-jira-issue` | Create Jira issues from user-provided context |
 | `web-to-markdown` | Convert web pages to clean, well-structured markdown files |
 | `web-to-asciidoc` | Convert web pages to clean, well-structured AsciiDoc files |
 | `generate-api-document` | Generate API spec documents in AsciiDoc from controller code |
