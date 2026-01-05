@@ -21,6 +21,52 @@ Skills are folders of instructions that Claude loads dynamically to improve perf
 | `structuring-documentation` | Step 2: Guide information architecture for technical documents |
 | `refining-sentences` | Step 3: Refine sentences for clarity, conciseness, and natural Korean |
 
+## Installing Skills
+
+Skills are installed to `~/.claude/skills/`. Choose one of the following methods:
+
+### Option 1: Symbolic Link (Recommended)
+
+Best for development or when you want skills to auto-update with the repo.
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/claude-settings.git
+cd claude-settings
+
+# Create symlinks for all skills
+REPO_SKILLS="$(pwd)/skills"
+CLAUDE_SKILLS="$HOME/.claude/skills"
+
+for skill in "$REPO_SKILLS"/*/; do
+  skill_name=$(basename "$skill")
+  rm -rf "$CLAUDE_SKILLS/$skill_name"  # Remove if exists
+  ln -s "$skill" "$CLAUDE_SKILLS/$skill_name"
+  echo "Linked: $skill_name"
+done
+```
+
+### Option 2: Copy Files
+
+Best for stable, standalone installation.
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/claude-settings.git
+cd claude-settings
+
+# Copy all skills
+cp -r skills/*/ ~/.claude/skills/
+```
+
+### Verify Installation
+
+```bash
+ls -la ~/.claude/skills/
+```
+
+---
+
 ## Creating a New Skill
 
 ### 1. Create Folder Structure
