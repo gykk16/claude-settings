@@ -15,10 +15,14 @@ claude-settings/
 │   └── settings.local.json # Local overrides (gitignored)
 ├── rules/                  # Coding style guides
 │   ├── kotlin.md
-│   └── typescript.md
-├── skills/                 # Custom skills
-│   └── code-review/
-│       └── SKILL.md
+│   ├── typescript.md
+│   └── commit.md
+├── skills/                 # Custom skills (11 skills)
+│   ├── code-review/
+│   ├── committing-changes/
+│   ├── creating-branch-from-jira/
+│   ├── creating-pull-request/
+│   └── ...
 ├── templates/              # Reusable templates
 │   ├── skill-template.md
 │   ├── commit-template.md
@@ -49,6 +53,9 @@ Custom skills for Claude Code automation.
 | Skill | Description |
 |-------|-------------|
 | `code-review` | Comprehensive code review with structured output format |
+| `committing-changes` | Create git commits following Conventional Commits with Jira integration |
+| `creating-branch-from-jira` | Create git feature branches from Jira tickets |
+| `creating-pull-request` | Create GitHub pull requests with Jira ticket integration |
 | `web-to-markdown` | Convert web pages to clean, well-structured markdown files |
 | `web-to-asciidoc` | Convert web pages to clean, well-structured AsciiDoc files |
 | `generate-api-document` | Generate API spec documents in AsciiDoc from controller code |
@@ -56,6 +63,14 @@ Custom skills for Claude Code automation.
 | `determining-document-type` | Step 1: Recommend appropriate document type based on goals |
 | `structuring-documentation` | Step 2: Guide information architecture for documents |
 | `refining-sentences` | Step 3: Refine sentences for clarity and natural Korean |
+
+### Git Workflow Skills
+
+```
+/creating-branch-from-jira  → Create feature branch from Jira ticket
+/committing-changes         → Commit with Conventional Commits format
+/creating-pull-request      → Create PR with Jira integration
+```
 
 ### Technical Writing Workflow
 
