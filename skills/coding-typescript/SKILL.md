@@ -11,6 +11,8 @@ For advanced usage, see [reference.md](reference.md)
 
 ## Core Principles
 
+> **Core Philosophy**: Simple is best. Write code that humans can understand. Don't over-engineer.
+
 1. **Type Safety** - Use `unknown` over `any`, leverage type inference
 2. **Named Exports** - Never use default exports
 3. **Explicit Style** - Always use braces, semicolons, single quotes
