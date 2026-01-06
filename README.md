@@ -58,6 +58,7 @@ Custom skills for Claude Code automation.
 | `creating-pull-request` | Create GitHub pull requests with Jira ticket integration |
 | `creating-jira-issue` | Create Jira issues from user-provided context |
 | `creating-github-issue` | Create GitHub issues with repo labels and Jira integration |
+| `coding-typescript` | TypeScript development following Google TypeScript Style Guide |
 | `web-to-markdown` | Convert web pages to clean, well-structured markdown files |
 | `web-to-asciidoc` | Convert web pages to clean, well-structured AsciiDoc files |
 | `generate-api-document` | Generate API spec documents in AsciiDoc from controller code |
