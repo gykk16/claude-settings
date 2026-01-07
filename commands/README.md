@@ -8,9 +8,14 @@ Commands are single Markdown files that define frequently used prompts. Unlike s
 
 ## Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `commit` | Create a git commit using the commit-changes skill |
+| Command | Skill | Description |
+|---------|-------|-------------|
+| `commit` | commit-changes | Create a git commit |
+| `review` | code-review | Review code changes |
+| `create-pr` | create-pull-request | Create a GitHub pull request |
+| `create-jira` | create-jira-issue | Create a Jira issue |
+| `create-issue` | create-github-issue | Create a GitHub issue |
+| `create-branch` | create-branch-from-jira | Create a feature branch from a Jira ticket |
 
 ## Installing Commands
 
