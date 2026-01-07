@@ -1,6 +1,6 @@
 # Claude Settings
 
-A collection of Claude Code configuration templates, rules, and skills.
+A collection of Claude Code configuration templates, rules, skills, and commands.
 
 ## Overview
 
@@ -13,6 +13,8 @@ claude-settings/
 ├── .claude/
 │   ├── settings.json       # Project settings
 │   └── settings.local.json # Local overrides (gitignored)
+├── commands/               # Slash commands (shortcuts)
+│   └── commit.md
 ├── rules/                  # Coding style guides
 │   ├── kotlin.md
 │   ├── typescript.md
@@ -97,6 +99,24 @@ skills/
 └── my-skill/
     └── SKILL.md
 ```
+
+## Commands
+
+Slash commands are simple shortcuts for frequently used prompts.
+
+| Command | Description |
+|---------|-------------|
+| `commit` | Create a git commit using the commit-changes skill |
+
+### Commands vs Skills
+
+| Aspect | Commands | Skills |
+|--------|----------|--------|
+| **Structure** | Single `.md` file | Directory with `SKILL.md` |
+| **Complexity** | Simple prompts | Complex workflows |
+| **Use case** | Quick shortcuts | Multi-step processes |
+
+See `commands/README.md` for detailed guide.
 
 ## Templates
 
