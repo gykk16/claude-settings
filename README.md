@@ -15,6 +15,8 @@ claude-settings/
 │   └── settings.local.json # Local overrides (gitignored)
 ├── commands/               # Slash commands (shortcuts)
 │   └── commit.md
+├── docs/                   # Documentation
+│   └── mcp-atlassian.md    # MCP server setup guides
 ├── rules/                  # Coding style guides
 │   ├── kotlin.md
 │   ├── typescript.md
@@ -130,6 +132,14 @@ See `commands/README.md` for detailed guide.
 | `skill-template.md` | Template for creating new skills |
 | `commit-template.md` | [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format |
 | `pr-template.md` | Pull request template with checklist |
+
+## MCP Servers
+
+MCP (Model Context Protocol) servers extend Claude Code with external integrations.
+
+| Server | Description | Guide |
+|--------|-------------|-------|
+| mcp-atlassian | Connect to Jira and Confluence | [docs/mcp-atlassian.md](docs/mcp-atlassian.md) |
 
 ## Usage
 
