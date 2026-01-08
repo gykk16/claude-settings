@@ -9,6 +9,10 @@ $ARGUMENTS
 
 ## Instructions
 
+> **⚠️ IMPORTANT: User confirmation is MANDATORY before creating any issue.**
+> You MUST use `AskUserQuestion` tool in step 4 to get explicit user approval.
+> NEVER create an issue without user confirmation.
+
 1. **Analyze user context**
    - Extract key information from user's description
    - Identify potential title and body content
@@ -23,22 +27,26 @@ $ARGUMENTS
    - Create detailed body with context
    - Include Jira ticket link if applicable
 
-4. **Ask user to confirm issue details**
-   - Show drafted title and body
+4. **Ask user to confirm issue details (REQUIRED)**
+   - **MUST use `AskUserQuestion` tool - NEVER skip this step**
+   - Show drafted title and body first
    - Use `AskUserQuestion` tool to select:
      - Labels (from repo labels)
      - Assignees
      - Milestone (if available)
+   - Final confirmation: Create / Edit / Cancel
+   - **DO NOT proceed to step 5 without explicit user approval**
 
 5. **Create the issue**
+   - **Only execute after user confirms in step 4**
    - Use `gh issue create` command
    - Return the created issue URL
 
 ---
 
-## Pre-Creation Confirmation
+## Pre-Creation Confirmation (MANDATORY)
 
-**IMPORTANT: Use `AskUserQuestion` tool to confirm issue details**
+**⚠️ REQUIRED: You MUST use `AskUserQuestion` tool to confirm ALL issue details before creating:**
 
 ### Step 1: Fetch Available Labels
 
@@ -70,7 +78,9 @@ Implement dark mode toggle for the application.
 **Available Milestones:** v1.0, v1.1, v2.0
 ```
 
-### Step 3: AskUserQuestion Options
+### Step 3: AskUserQuestion Options (ALL REQUIRED)
+
+You MUST ask user for ALL of the following using `AskUserQuestion` tool:
 
 1. **Labels** (multiSelect: true)
    - Suggest relevant labels from repo
@@ -84,6 +94,13 @@ Implement dark mode toggle for the application.
 3. **Milestone**
    - Available milestones from repo
    - `None` - no milestone
+
+4. **Final Confirmation (MUST ASK)**
+   - `Create Issue` - proceed with creation
+   - `Edit` - modify issue content
+   - `Cancel` - abort issue creation
+
+**DO NOT create issue until user explicitly selects "Create Issue"**
 
 ---
 

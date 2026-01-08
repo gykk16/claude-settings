@@ -9,6 +9,10 @@ $ARGUMENTS
 
 ## Instructions
 
+> **⚠️ IMPORTANT: User confirmation is MANDATORY before creating any PR.**
+> You MUST use `AskUserQuestion` tool in step 5 to get explicit user approval.
+> NEVER create a PR without user confirmation.
+
 1. **Analyze current branch and commits**
    - Run `git branch --show-current` to get current branch name
    - Run `git log main..HEAD --oneline` to see commits to be included
@@ -28,16 +32,19 @@ $ARGUMENTS
    - Generate title from commits or Jira ticket
    - Create description with summary, changes, and Jira link
 
-5. **Ask user to confirm PR details**
-   - Show drafted title and body
-   - Use `AskUserQuestion` tool to select:
+5. **Ask user to confirm PR details (REQUIRED)**
+   - **MUST use `AskUserQuestion` tool - NEVER skip this step**
+   - Show drafted title and body first
+   - Use `AskUserQuestion` to get user selections for:
      - Target branch (`main`, `develop`, `release/*`)
      - Labels (from repo labels)
      - Assignees
      - Milestone (if available)
-   - Allow user to edit or cancel
+   - Final confirmation: Create / Edit / Cancel
+   - **DO NOT proceed to step 6 without explicit user approval**
 
 6. **Create the pull request**
+   - **Only execute after user confirms in step 5**
    - Use `gh pr create` command with confirmed content
    - Return the PR URL to user
 
@@ -85,9 +92,9 @@ Examples:
 
 ---
 
-## Pre-Creation Confirmation
+## Pre-Creation Confirmation (MANDATORY)
 
-**IMPORTANT: Use `AskUserQuestion` tool to confirm PR details**
+**⚠️ REQUIRED: You MUST use `AskUserQuestion` tool to confirm ALL of the following before creating PR:**
 
 Show the user:
 - PR title
@@ -115,9 +122,9 @@ Show the user:
 **Available Milestones:** v1.0, v1.1, v2.0
 ```
 
-### AskUserQuestion Options
+### AskUserQuestion Options (ALL REQUIRED)
 
-Use multiple `AskUserQuestion` calls to select:
+You MUST ask user for ALL of the following using `AskUserQuestion` tool:
 
 **1. Target Branch**
 - `main` - create PR to main branch
@@ -137,10 +144,12 @@ Use multiple `AskUserQuestion` calls to select:
 - List available milestones from repo
 - `None` - no milestone
 
-**5. Final Confirmation**
+**5. Final Confirmation (MUST ASK)**
 - `Create PR` - proceed with creation
 - `Edit` - modify PR content
 - `Cancel` - abort PR creation
+
+**DO NOT create PR until user explicitly selects "Create PR"**
 
 ---
 
