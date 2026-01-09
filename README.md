@@ -42,6 +42,7 @@ Language-specific style guides emphasizing clean, readable code.
 |----------|------|----------|
 | Kotlin | `rules/kotlin.md` | [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html) |
 | TypeScript | `rules/typescript.md` | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) |
+| Java | `skills/code-java/` | Modern Java best practices (Java 8-25 LTS) |
 
 ### Core Principles
 
@@ -65,6 +66,7 @@ Custom skills for Claude Code automation.
 | `create-github-issue` | Create GitHub issues with repo labels and Jira integration |
 | `code-typescript` | TypeScript development following Google TypeScript Style Guide |
 | `code-kotlin` | Kotlin development following Kotlin Coding Conventions |
+| `code-java` | Java development with modern best practices (Java 8-25 LTS) |
 | `web-to-markdown` | Convert web pages to clean, well-structured markdown files |
 | `web-to-asciidoc` | Convert web pages to clean, well-structured AsciiDoc files |
 | `generate-api-document` | Generate API spec documents in AsciiDoc from controller code |
