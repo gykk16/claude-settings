@@ -141,6 +141,8 @@ MCP (Model Context Protocol) servers extend Claude Code with external integratio
 |--------|-------------|-------|
 | mcp-atlassian | Connect to Jira and Confluence | [docs/mcp-atlassian.md](docs/mcp-atlassian.md) |
 
+## Usage
+
 ## Installation
 
 ### Install Skills and Commands (Recommended)

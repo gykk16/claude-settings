@@ -9,6 +9,10 @@ $ARGUMENTS
 
 ## Instructions
 
+> **⚠️ IMPORTANT: User confirmation is MANDATORY before creating any commit.**
+> You MUST use `AskUserQuestion` tool in step 4 to get explicit user approval.
+> NEVER commit without user confirmation.
+
 1. **Analyze changes**
    - Run `git status` to see modified/new files
    - Run `git diff --staged` or `git diff` to understand the changes
@@ -26,12 +30,15 @@ $ARGUMENTS
    - Determine scope from affected module/component
    - Write clear, imperative description
 
-4. **Ask user to confirm before committing**
+4. **Ask user to confirm before committing (REQUIRED)**
+   - **MUST use `AskUserQuestion` tool - NEVER skip this step**
    - Show changed files and proposed commit message
    - Use `AskUserQuestion` tool to get user approval
-   - Wait for explicit confirmation before proceeding
+   - Options: Commit / Edit message / Cancel
+   - **DO NOT proceed to step 5 without explicit user approval**
 
 5. **Create commit**
+   - **Only execute after user confirms in step 4**
    - Stage files if needed
    - Execute git commit with the approved message
 
@@ -83,9 +90,9 @@ $ARGUMENTS
 
 ---
 
-## Pre-Commit Confirmation
+## Pre-Commit Confirmation (MANDATORY)
 
-**IMPORTANT: Use `AskUserQuestion` tool at two points**
+**⚠️ REQUIRED: You MUST use `AskUserQuestion` tool at two points - NEVER skip these:**
 
 ### 1. Confirm Ticket/Issue Reference
 
@@ -104,7 +111,7 @@ Use `AskUserQuestion` with options:
 - `None` - no ticket/issue reference
 - Custom - enter different number
 
-### 2. Confirm Commit
+### 2. Confirm Commit (MUST ASK)
 
 Show the user:
 - Changed files list with status (modified/new/deleted)
@@ -114,6 +121,8 @@ Use `AskUserQuestion` tool with options:
 - "Commit" - proceed with the commit
 - "Edit message" - let user modify the message
 - "Cancel" - abort the commit
+
+**DO NOT commit until user explicitly selects "Commit"**
 
 ### Example Output Before Asking
 
