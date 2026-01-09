@@ -6,19 +6,12 @@ This repository contains Claude Code configuration templates, rules, and skills.
 
 ## Guidelines
 
-- **Always check for appropriate skills before starting a task**
+> **⚠️ Always check for appropriate skills before starting a task**
 - Follow consistent formatting in all configuration files
 - Document all custom skills with usage examples
 - Keep rules focused and actionable
 
 ## Writing Code
-
-When writing code, follow the style guides in the `rules/` folder:
-
-| Language | Rule File |
-|----------|-----------|
-| Kotlin | `rules/kotlin.md` |
-| TypeScript | `rules/typescript.md` |
 
 Key principles across all languages:
 
