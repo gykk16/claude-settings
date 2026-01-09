@@ -42,6 +42,7 @@ Language-specific style guides emphasizing clean, readable code.
 |----------|------|----------|
 | Kotlin | `rules/kotlin.md` | [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html) |
 | TypeScript | `rules/typescript.md` | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) |
+| Java | `rules/java.md` | Modern Java best practices (Java 8-25 LTS) |
 
 ### Core Principles
 
@@ -65,6 +66,7 @@ Custom skills for Claude Code automation.
 | `create-github-issue` | Create GitHub issues with repo labels and Jira integration |
 | `code-typescript` | TypeScript development following Google TypeScript Style Guide |
 | `code-kotlin` | Kotlin development following Kotlin Coding Conventions |
+| `code-java` | Java development with modern best practices (Java 8-25 LTS) |
 | `web-to-markdown` | Convert web pages to clean, well-structured markdown files |
 | `web-to-asciidoc` | Convert web pages to clean, well-structured AsciiDoc files |
 | `generate-api-document` | Generate API spec documents in AsciiDoc from controller code |
@@ -142,6 +144,30 @@ MCP (Model Context Protocol) servers extend Claude Code with external integratio
 | mcp-atlassian | Connect to Jira and Confluence | [docs/mcp-atlassian.md](docs/mcp-atlassian.md) |
 
 ## Usage
+
+## Installation
+
+### Install Skills and Commands (Recommended)
+
+Install skills and commands by creating symbolic links to `~/.claude/`:
+
+```bash
+# Install all skills and commands
+./install-skills.sh
+
+# Uninstall all skills and commands
+./uninstall-skills.sh
+```
+
+**What gets installed:**
+- 16 skills → `~/.claude/skills/`
+- 6 commands → `~/.claude/commands/`
+
+**Benefits:**
+- Automatically available in all Claude Code sessions
+- Changes to this repo are immediately reflected
+- Easy to update by pulling latest changes
+- Clean uninstall removes all symlinks
 
 ### Copy to Your Project
 
