@@ -1,202 +1,99 @@
 # Claude Settings
 
-A collection of Claude Code configuration templates, rules, skills, and commands.
+Claude Code skills, commands, and coding rules.
 
-## Overview
+## Why Claude Settings?
 
-This repository provides reusable configurations for Claude Code to maintain consistent coding standards and workflows across projects.
+- **Consistent workflows** - Same standards for commits, PRs, and code reviews
+- **18 ready-to-use skills** - No setup required
+- **Install once, use everywhere** - Symlinks to ~/.claude/
 
-## Structure
+## Quick Start
+
+```bash
+# 1. Clone or fork the repository
+git clone https://github.com/gykk16/claude-settings.git
+# or fork via GitHub and clone your fork
+cd claude-settings
+
+# 2. Install skills and commands
+python scripts/manage-skills.py install
+
+# 3. Use in any Claude Code session
+/commit          # Create a git commit
+/review          # Review code changes
+/create-pr       # Create a pull request
+```
+
+## Features
+
+### Skills
+
+Custom skills for development workflows.
+
+| Category | Skills |
+|----------|--------|
+| **Git Workflow** | `commit-changes`, `create-pull-request`, `create-branch-from-jira` |
+| **Code Quality** | `code-review`, `software-engineer` |
+| **Code Style** | `code-kotlin`, `code-typescript`, `code-java`, `code-spring`, `code-sql` |
+| **Documentation** | `web-to-markdown`, `web-to-asciidoc`, `generate-api-document` |
+| **Issue Tracking** | `create-jira-issue`, `create-github-issue` |
+
+See [skills/README.md](skills/README.md) for the full list and usage examples.
+
+### Commands
+
+Shortcuts for common skills.
+
+| Command | Description |
+|---------|-------------|
+| `/commit` | Create a git commit with Conventional Commits format |
+| `/review` | Review code changes |
+| `/create-pr` | Create a GitHub pull request |
+| `/create-branch` | Create a feature branch from a Jira ticket |
+
+## Project Structure
 
 ```
 claude-settings/
-├── .claude/
-│   ├── settings.json       # Project settings
-│   └── settings.local.json # Local overrides (gitignored)
-├── commands/               # Slash commands (shortcuts)
-│   └── commit.md
-├── docs/                   # Documentation
-│   └── mcp-atlassian.md    # MCP server setup guides
-├── rules/                  # Coding style guides
-│   ├── kotlin.md
-│   ├── typescript.md
-│   └── commit.md
-├── scripts/                # Installation scripts
-│   └── manage-skills.py    # Cross-platform installer
-├── skills/                 # Custom skills (18 skills)
-│   ├── code-review/
-│   ├── commit-changes/
-│   ├── create-branch-from-jira/
-│   ├── create-pull-request/
-│   └── ...
-├── templates/              # Reusable templates
-│   ├── skill-template.md
-│   ├── commit-template.md
-│   └── pr-template.md
-└── CLAUDE.md               # Project instructions
+├── skills/          # Custom skills (18 skills)
+├── commands/        # Slash command shortcuts
+├── rules/           # Coding style guides
+├── templates/       # Reusable templates
+├── scripts/         # Installation scripts
+└── CLAUDE.md        # Project instructions
 ```
 
-## Rules
+## Installation Options
 
-Language-specific style guides emphasizing clean, readable code.
+### Global Installation (Recommended)
 
-| Language | File | Based On |
-|----------|------|----------|
-| Kotlin | `rules/kotlin.md` | [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html) |
-| TypeScript | `rules/typescript.md` | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) |
-| Java | `rules/java.md` | Modern Java best practices (Java 8-25 LTS) |
+Install globally to `~/.claude/`:
 
-### Core Principles
-
-- Write human-readable, clean code
-- Follow OOP, SOLID, and functional principles pragmatically
-- **Do not over-engineer** - simple is best
-- Do not duplicate code - write reusable code
-
-## Skills
-
-Custom skills for Claude Code automation.
-
-| Skill | Description |
-|-------|-------------|
-| `software-engineer` | Senior engineer guidance using coding and review skills |
-| `code-review` | Comprehensive code review with structured output format |
-| `commit-changes` | Create git commits following Conventional Commits with Jira integration |
-| `create-branch-from-jira` | Create git feature branches from Jira tickets |
-| `create-pull-request` | Create GitHub pull requests with Jira ticket integration |
-| `create-jira-issue` | Create Jira issues from user-provided context |
-| `create-github-issue` | Create GitHub issues with repo labels and Jira integration |
-| `code-typescript` | TypeScript development following Google TypeScript Style Guide |
-| `code-kotlin` | Kotlin development following Kotlin Coding Conventions |
-| `code-java` | Java development with modern best practices (Java 8-25 LTS) |
-| `web-to-markdown` | Convert web pages to clean, well-structured markdown files |
-| `web-to-asciidoc` | Convert web pages to clean, well-structured AsciiDoc files |
-| `generate-api-document` | Generate API spec documents in AsciiDoc from controller code |
-| `technical-writing` | Complete technical writing process through 3 sequential steps |
-| `determine-document-type` | Step 1: Recommend appropriate document type based on goals |
-| `structure-documentation` | Step 2: Guide information architecture for documents |
-| `refine-sentences` | Step 3: Refine sentences for clarity and natural Korean |
-
-### Git Workflow Skills
-
-```
-/create-branch-from-jira  → Create feature branch from Jira ticket
-/commit-changes           → Commit with Conventional Commits format
-/create-pull-request      → Create PR with Jira integration
+```bash
+python scripts/manage-skills.py install      # Install
+python scripts/manage-skills.py status       # Check status
+python scripts/manage-skills.py uninstall    # Uninstall
 ```
 
-### Technical Writing Workflow
+### Copy to Project
 
-```
-/technical-writing
-    ├── Step 1: /determine-document-type
-    ├── Step 2: /structure-documentation
-    └── Step 3: /refine-sentences
+Copy to your project:
+
+```bash
+cp -r rules/ /path/to/your/project/
+cp CLAUDE.md /path/to/your/project/
 ```
 
 ### Creating a New Skill
 
-1. Copy `templates/skill-template.md`
-2. Create folder in `skills/` with skill name
-3. Name the file `SKILL.md`
-
-```
-skills/
-└── my-skill/
-    └── SKILL.md
-```
-
-## Commands
-
-Slash commands are simple shortcuts for frequently used prompts.
-
-| Command | Skill | Description |
-|---------|-------|-------------|
-| `commit` | commit-changes | Create a git commit |
-| `review` | code-review | Review code changes |
-| `create-pr` | create-pull-request | Create a GitHub pull request |
-| `create-jira` | create-jira-issue | Create a Jira issue |
-| `create-issue` | create-github-issue | Create a GitHub issue |
-| `create-branch` | create-branch-from-jira | Create a feature branch from a Jira ticket |
-
-### Commands vs Skills
-
-| Aspect | Commands | Skills |
-|--------|----------|--------|
-| **Structure** | Single `.md` file | Directory with `SKILL.md` |
-| **Complexity** | Simple prompts | Complex workflows |
-| **Use case** | Quick shortcuts | Multi-step processes |
-
-See `commands/README.md` for detailed guide.
-
-## Templates
-
-| Template | Description |
-|----------|-------------|
-| `skill-template.md` | Template for creating new skills |
-| `commit-template.md` | [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format |
-| `pr-template.md` | Pull request template with checklist |
-
-## MCP Servers
-
-MCP (Model Context Protocol) servers extend Claude Code with external integrations.
-
-| Server | Description | Guide |
-|--------|-------------|-------|
-| mcp-atlassian | Connect to Jira and Confluence | [docs/mcp-atlassian.md](docs/mcp-atlassian.md) |
-
-## Usage
-
-## Installation
-
-### Install Skills and Commands (Recommended)
-
-Install skills and commands by creating symbolic links to `~/.claude/`:
-
 ```bash
-# Install all skills and commands
+# 1. Copy the template
+cp -r templates/skill-template.md skills/my-skill/SKILL.md
+
+# 2. Edit the skill file
+# 3. Run install to create symlinks
 python scripts/manage-skills.py install
-
-# Uninstall all skills and commands
-python scripts/manage-skills.py uninstall
-
-# Check installation status
-python scripts/manage-skills.py status
 ```
 
-**Options:**
-```bash
-python scripts/manage-skills.py install -y  # Skip confirmation prompts
-```
-
-**What gets installed:**
-- 18 skills → `~/.claude/skills/`
-- 6 commands → `~/.claude/commands/`
-
-**Benefits:**
-- Cross-platform (Windows, macOS, Linux)
-- Automatically available in all Claude Code sessions
-- Changes to this repo are immediately reflected
-- Easy to update by pulling latest changes
-- Clean uninstall removes only symlinks from this repo
-
-### Copy to Your Project
-
-```bash
-# Copy rules to your project
-cp -r rules/ /path/to/your/project/
-
-# Copy CLAUDE.md
-cp CLAUDE.md /path/to/your/project/
-```
-
-### Use as Reference
-
-Reference these files in your project's `CLAUDE.md`:
-
-```markdown
-## Coding Standards
-
-Follow the Kotlin style guide: [link to rules/kotlin.md]
-```
-
+See [skills/README.md](skills/README.md) for the skill authoring guide.
