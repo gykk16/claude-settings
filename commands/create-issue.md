@@ -2,6 +2,12 @@
 description: Create a GitHub issue (create-github-issue)
 ---
 
-Use the `/create-github-issue` skill to create a GitHub issue.
+**MUST use the Skill tool to invoke `create-github-issue` skill.**
+
+```
+<invoke name="Skill">
+  <parameter name="skill">create-github-issue</parameter>
+</invoke>
+```
 
 $ARGUMENTS

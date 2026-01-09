@@ -2,6 +2,12 @@
 description: Review code changes (code-review)
 ---
 
-Use the `/code-review` skill to review code.
+**MUST use the Skill tool to invoke `code-review` skill.**
+
+```
+<invoke name="Skill">
+  <parameter name="skill">code-review</parameter>
+</invoke>
+```
 
 $ARGUMENTS

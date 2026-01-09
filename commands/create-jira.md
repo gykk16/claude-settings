@@ -2,6 +2,12 @@
 description: Create a Jira issue (create-jira-issue)
 ---
 
-Use the `/create-jira-issue` skill to create a Jira issue.
+**MUST use the Skill tool to invoke `create-jira-issue` skill.**
+
+```
+<invoke name="Skill">
+  <parameter name="skill">create-jira-issue</parameter>
+</invoke>
+```
 
 $ARGUMENTS
