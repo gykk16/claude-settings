@@ -2,208 +2,107 @@
 
 REST controllers handle HTTP requests, validate input, delegate to services, and return responses.
 
-## Controller Principles
+## When to Use
 
-> **Keep controllers thin.** Methods should be 7-10 lines max. Delegate business logic to services.
+| Scenario | Controller | Service |
+|----------|------------|---------|
+| HTTP request/response handling | ✅ | ❌ |
+| Input validation annotations | ✅ | ❌ |
+| Status code selection | ✅ | ❌ |
+| Business rules/logic | ❌ | ✅ |
+| Multi-step operations | ❌ | ✅ |
+| Transaction management | ❌ | ✅ |
+
+## Key Principles
+
+> **Keep controllers thin.** 7-10 lines max. Delegate business logic to services.
 
 | Guideline | Description |
 |-----------|-------------|
 | **Max 7-10 lines** | Controller methods should be concise |
 | **No business logic** | Delegate to service layer |
-| **Simple cases OK** | Trivial logic (e.g., simple mapping) can stay in controller |
+| **Simple cases OK** | Trivial logic (e.g., simple mapping) can stay |
 | **Single responsibility** | One action per endpoint |
 
-### When Business Logic in Controller is Acceptable
+## Decision: Controller vs Service Logic
 
-```kotlin
-// OK: Trivial transformation, no business rules
-@GetMapping("/{id}/exists")
-fun checkExists(@PathVariable id: Long): ResponseEntity<Boolean> =
-    ResponseEntity.ok(userService.existsById(id))
+**Keep in Controller:**
+- Simple null checks returning 404
+- Direct mapping to response
+- Trivial transformations (exists check, toDto)
 
-// OK: Simple conditional response
-@GetMapping("/{id}")
-fun getUser(@PathVariable id: Long): ResponseEntity<UserDto> =
-    userService.findById(id)
-        ?.let { ResponseEntity.ok(it) }
-        ?: ResponseEntity.notFound().build()
-```
+**Move to Service:**
+- Multiple conditions or validations
+- State changes with business rules
+- Operations involving multiple entities
 
-### When to Move Logic to Service
-
-```kotlin
-// Bad: Business logic in controller
-@PostMapping("/{id}/activate")
-fun activateUser(@PathVariable id: Long): ResponseEntity<UserDto> {
-    val user = userService.findById(id) ?: return ResponseEntity.notFound().build()
-    if (user.status == Status.SUSPENDED) {
-        throw BusinessException("Suspended users cannot be activated")
-    }
-    if (user.emailVerified == false) {
-        throw BusinessException("Email must be verified first")
-    }
-    val activated = user.copy(status = Status.ACTIVE, activatedAt = Instant.now())
-    return ResponseEntity.ok(userService.save(activated).toDto())
-}
-
-// Good: Delegate to service
-@PostMapping("/{id}/activate")
-fun activateUser(@PathVariable id: Long): ResponseEntity<UserDto> =
-    ResponseEntity.ok(userService.activate(id))
-```
-
-## REST API Design Principles
-
-Follow RESTful conventions for predictable, intuitive APIs.
-
-### Resource Naming
-
-| Pattern | Example | Description |
-|---------|---------|-------------|
-| Collection | `/users` | Plural nouns for collections |
-| Item | `/users/{id}` | Singular resource by ID |
-| Sub-resource | `/users/{id}/orders` | Nested resources |
-| Action (avoid) | `/users/{id}/activate` | Use sparingly, prefer state change via PUT |
+## REST API Design
 
 ### HTTP Methods
 
-| Method | Purpose | Idempotent | Request Body |
-|--------|---------|------------|--------------|
-| `GET` | Read resource(s) | Yes | No |
-| `POST` | Create resource | No | Yes |
-| `PUT` | Replace resource | Yes | Yes |
-| `PATCH` | Partial update | Yes | Yes |
-| `DELETE` | Remove resource | Yes | No |
+| Method | Purpose | Idempotent | Response Code |
+|--------|---------|------------|---------------|
+| `GET` | Read resource(s) | Yes | 200 OK |
+| `POST` | Create resource | No | 201 Created |
+| `PUT` | Replace resource | Yes | 200 OK |
+| `PATCH` | Partial update | Yes | 200 OK |
+| `DELETE` | Remove resource | Yes | 204 No Content |
 
-### URL Design
+### URL Patterns
 
-```kotlin
-// Good: Resource-oriented
-GET    /api/v1/users           // List users
-GET    /api/v1/users/{id}      // Get user
-POST   /api/v1/users           // Create user
-PUT    /api/v1/users/{id}      // Replace user
-PATCH  /api/v1/users/{id}      // Update user
-DELETE /api/v1/users/{id}      // Delete user
+| Pattern | Example | Use Case |
+|---------|---------|----------|
+| Collection | `/api/v1/users` | List/create resources |
+| Item | `/api/v1/users/{id}` | Single resource CRUD |
+| Sub-resource | `/api/v1/users/{id}/orders` | Related resources |
+| Search | `/api/v1/users/search?name=kim` | Complex queries |
 
-// Good: Sub-resources
-GET    /api/v1/users/{id}/orders        // User's orders
-POST   /api/v1/users/{id}/orders        // Create order for user
+**Avoid:** Verbs in URL (`/createUser`, `/getUserById`)
 
-// Avoid: Verbs in URL
-POST   /api/v1/users/createUser         // Bad
-POST   /api/v1/getUserById              // Bad
-GET    /api/v1/users/search?name=kim    // OK for complex queries
-```
-
-### Query Parameters
-
-```kotlin
-// Filtering
-GET /api/v1/users?status=active&role=admin
-
-// Pagination
-GET /api/v1/users?page=0&size=20
-
-// Sorting
-GET /api/v1/users?sort=createdAt,desc
-
-// Combined
-GET /api/v1/users?status=active&page=0&size=20&sort=name,asc
-```
-
-## REST Controller Structure
+## Controller Structure
 
 ```kotlin
 @RestController
 @RequestMapping("/api/v1/users")
-class UserController(
-    private val userService: UserService,
-) {
-    // endpoints here
+class UserController(private val userService: UserService) {
+
+    @GetMapping("/{id}")
+    fun getUser(@PathVariable id: Long): ResponseEntity<UserDto> =
+        userService.findById(id)
+            ?.let { ResponseEntity.ok(it) }
+            ?: ResponseEntity.notFound().build()
+
+    @PostMapping
+    fun createUser(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<UserDto> =
+        ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request))
+
+    @DeleteMapping("/{id}")
+    fun deleteUser(@PathVariable id: Long): ResponseEntity<Void> {
+        userService.delete(id)
+        return ResponseEntity.noContent().build()
+    }
 }
 ```
 
-**Key annotations:**
-- `@RestController`: Combines @Controller + @ResponseBody
-- `@RequestMapping`: Base path for all endpoints
-- Constructor injection for dependencies
+## Validation
 
-## Request Mapping
-
-```kotlin
-@GetMapping
-fun getAllUsers(): ResponseEntity<List<UserDto>> =
-    ResponseEntity.ok(userService.findAll())
-
-@GetMapping("/{id}")
-fun getUserById(@PathVariable id: Long): ResponseEntity<UserDto> =
-    userService.findById(id)
-        ?.let { ResponseEntity.ok(it) }
-        ?: ResponseEntity.notFound().build()
-
-@PostMapping
-fun createUser(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<UserDto> =
-    ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request))
-
-@PutMapping("/{id}")
-fun updateUser(
-    @PathVariable id: Long,
-    @Valid @RequestBody request: UpdateUserRequest,
-): ResponseEntity<UserDto> =
-    ResponseEntity.ok(userService.update(id, request))
-
-@DeleteMapping("/{id}")
-fun deleteUser(@PathVariable id: Long): ResponseEntity<Void> {
-    userService.delete(id)
-    return ResponseEntity.noContent().build()
-}
-```
-
-## Path Variables & Query Parameters
-
-```kotlin
-@GetMapping("/search")
-fun searchUsers(
-    @RequestParam name: String,
-    @RequestParam(required = false, defaultValue = "0") page: Int,
-    @RequestParam(required = false, defaultValue = "20") size: Int,
-): ResponseEntity<Page<UserDto>> =
-    ResponseEntity.ok(userService.search(name, page, size))
-
-@GetMapping("/{userId}/posts/{postId}")
-fun getUserPost(
-    @PathVariable userId: Long,
-    @PathVariable postId: Long,
-): ResponseEntity<PostDto> =
-    ResponseEntity.ok(userService.getPost(userId, postId))
-```
-
-## Request Body & Validation
+| Annotation | Use Case |
+|------------|----------|
+| `@NotBlank` | Required string fields |
+| `@Email` | Email format validation |
+| `@Size(min, max)` | Length constraints |
+| `@Min`, `@Max` | Numeric bounds |
+| `@Pattern` | Regex validation |
 
 ```kotlin
 data class CreateUserRequest(
-    @field:NotBlank(message = "Name is required")
-    val name: String,
-
-    @field:Email(message = "Invalid email format")
-    val email: String,
-
-    @field:Size(min = 8, message = "Password must be at least 8 characters")
-    val password: String,
-
-    @field:Min(value = 18, message = "Age must be at least 18")
-    val age: Int,
+    @field:NotBlank val name: String,
+    @field:Email val email: String,
+    @field:Size(min = 8) val password: String,
 )
-
-@PostMapping
-fun createUser(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<UserDto> =
-    ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request))
 ```
 
-## Response Handling
-
-**HTTP Status Codes:**
+## Response Status Codes
 
 | Status | Use Case |
 |--------|----------|
@@ -211,36 +110,8 @@ fun createUser(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<U
 | `201 Created` | Successful POST |
 | `204 No Content` | Successful DELETE |
 | `400 Bad Request` | Invalid input |
-| `401 Unauthorized` | Authentication required |
-| `403 Forbidden` | Authorization failed |
 | `404 Not Found` | Resource not found |
 | `409 Conflict` | Resource already exists |
-
-## DTO Pattern
-
-```kotlin
-// Request DTO
-data class CreateUserRequest(
-    val name: String,
-    val email: String,
-)
-
-// Response DTO
-data class UserDto(
-    val id: Long,
-    val name: String,
-    val email: String,
-    val createdAt: LocalDateTime,
-)
-
-// Mapping extension
-fun User.toDto() = UserDto(
-    id = id,
-    name = name,
-    email = email,
-    createdAt = createdAt,
-)
-```
 
 ## Exception Handling
 
@@ -254,33 +125,19 @@ class GlobalExceptionHandler {
             .body(ErrorResponse(message = ex.message ?: "Resource not found"))
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleValidationError(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
-        val errors = ex.bindingResult.fieldErrors
-            .associate { it.field to it.defaultMessage }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(ErrorResponse(message = "Validation failed", details = errors))
+    fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
+        val errors = ex.bindingResult.fieldErrors.associate { it.field to it.defaultMessage }
+        return ResponseEntity.badRequest().body(ErrorResponse("Validation failed", errors))
     }
 }
-
-data class ErrorResponse(
-    val message: String,
-    val details: Map<String, Any?>? = null,
-    val timestamp: LocalDateTime = LocalDateTime.now(),
-)
 ```
 
-## API Versioning
+## Common Pitfalls
 
-**URL-based versioning** (recommended):
-
-```kotlin
-@RestController
-@RequestMapping("/api/v1/users")
-class UserControllerV1(private val userService: UserService)
-
-@RestController
-@RequestMapping("/api/v2/users")
-class UserControllerV2(private val userService: UserService)
-```
-
-**Best practice:** Use URL versioning for clarity and caching.
+| Pitfall | Problem | Solution |
+|---------|---------|----------|
+| Business logic in controller | Hard to test, violates SRP | Move to service layer |
+| Missing `@Valid` | Validation not triggered | Always use with `@RequestBody` |
+| Returning entity directly | Exposes internal structure | Use DTOs |
+| Inconsistent error responses | Poor API experience | Use `@RestControllerAdvice` |
+| No API versioning | Breaking changes affect clients | Use URL versioning `/api/v1/` |

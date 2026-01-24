@@ -7,17 +7,72 @@ description: Guides Spring Boot development following Spring official convention
 
 $ARGUMENTS
 
-For advanced usage, see [reference/reference.md](reference/reference.md)
+Spring Boot 개발 시 Spring 공식 컨벤션을 따르도록 안내합니다.
+
+## References
+
+For detailed information, see:
+- [reference/reference.md](reference/reference.md)
+
+## Instructions
+
+1. **Spring 컨벤션 준수** - Spring Boot의 기본 규칙을 따른다
+2. **생성자 주입 사용** - 필드 주입 대신 생성자 주입으로 의존성 관리
+3. **계층 분리 유지** - Controller → Service → Repository 구조 준수
+4. **전역 예외 처리** - `@RestControllerAdvice`로 일관된 에러 응답
+5. **적절한 HTTP 상태 코드** - 200 OK, 201 Created, 204 No Content 등 구분
+
+## Examples
+
+**Input:**
+```
+UserService 클래스 작성해줘
+```
+
+**Output:**
+```kotlin
+@Service
+@Transactional(readOnly = true)
+class UserService(
+    private val userRepository: UserRepository,
+) {
+    fun findById(id: Long): User? =
+        userRepository.findById(id).orElse(null)
+
+    @Transactional
+    fun create(request: CreateUserRequest): User =
+        userRepository.save(request.toEntity())
+}
+```
+
+**Input:**
+```
+REST API 엔드포인트 만들어줘
+```
+
+**Output:**
+```kotlin
+@RestController
+@RequestMapping("/api/v1/users")
+class UserController(
+    private val userService: UserService,
+) {
+    @GetMapping("/{id}")
+    fun getUser(@PathVariable id: Long): ResponseEntity<UserResponse> =
+        userService.findById(id)
+            ?.let { ResponseEntity.ok(UserResponse.from(it)) }
+            ?: ResponseEntity.notFound().build()
+
+    @PostMapping
+    fun createUser(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<UserResponse> =
+        ResponseEntity.status(HttpStatus.CREATED)
+            .body(UserResponse.from(userService.create(request)))
+}
+```
 
 ## Core Principles
 
 > **Core Philosophy**: Follow Spring conventions. Use constructor injection. Keep layers clean.
-
-1. **Constructor Injection** - Immutable dependencies, testable code
-2. **Layered Architecture** - Controller → Service → Repository
-3. **Single Responsibility** - One reason to change per class
-4. **Convention over Configuration** - Use sensible defaults
-5. **Fail Fast** - Validate early, fail with clear messages
 
 | Do | Don't |
 |----|-------|
@@ -26,8 +81,6 @@ For advanced usage, see [reference/reference.md](reference/reference.md)
 | Use `@ConfigurationProperties` | Scatter `@Value` everywhere |
 | Handle exceptions globally | Catch exceptions in every method |
 | Return proper HTTP status codes | Return 200 for everything |
-
-> **Remember**: Spring Boot is opinionated for a reason. Follow conventions.
 
 ## Quick Reference
 
@@ -66,27 +119,6 @@ class UserService(
         emailService.sendWelcome(user.email)
         return user
     }
-}
-```
-
-### REST Controller
-
-```kotlin
-@RestController
-@RequestMapping("/api/v1/users")
-class UserController(
-    private val userService: UserService,
-) {
-    @GetMapping("/{id}")
-    fun getUser(@PathVariable id: Long): ResponseEntity<UserResponse> =
-        userService.findById(id)
-            ?.let { ResponseEntity.ok(UserResponse.from(it)) }
-            ?: ResponseEntity.notFound().build()
-
-    @PostMapping
-    fun createUser(@Valid @RequestBody request: CreateUserRequest): ResponseEntity<UserResponse> =
-        userService.createUser(request)
-            .let { ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(it)) }
 }
 ```
 
@@ -198,30 +230,5 @@ class OrderController(private val orderService: OrderService) {
     @PostMapping
     fun createOrder(@RequestBody request: CreateOrderRequest): Order =
         orderService.createOrder(request)
-}
-```
-
-### Catching Generic Exceptions
-
-```kotlin
-// Bad: swallows all errors
-fun processPayment(payment: Payment): Result {
-    return try {
-        paymentGateway.process(payment)
-    } catch (e: Exception) {
-        Result.failure("Payment failed")
-    }
-}
-
-// Good: handle specific exceptions
-fun processPayment(payment: Payment): Result {
-    return try {
-        paymentGateway.process(payment)
-    } catch (e: InsufficientFundsException) {
-        Result.failure("Insufficient funds")
-    } catch (e: PaymentGatewayException) {
-        logger.error("Gateway error", e)
-        throw PaymentProcessingException("Payment processing failed", e)
-    }
 }
 ```

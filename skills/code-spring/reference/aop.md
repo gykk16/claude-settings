@@ -1,23 +1,29 @@
 # Aspect-Oriented Programming (AOP)
 
+AOP addresses cross-cutting concerns that span multiple layers.
+
 ## When to Use AOP
 
-AOP addresses cross-cutting concerns that span multiple layers:
+| Use Case | Description |
+|----------|-------------|
+| **Logging** | Method entry, exit, exceptions |
+| **Security** | Permission checks before execution |
+| **Transactions** | Declarative transaction management |
+| **Caching** | Automatic result caching |
+| **Performance** | Execution time measurement |
 
-- **Logging** - Log method entry, exit, and exceptions
-- **Security** - Check permissions before method execution
-- **Transactions** - Manage database transactions declaratively
-- **Caching** - Cache method results automatically
-- **Performance Monitoring** - Measure execution time
+---
 
 ## Core Concepts
 
 | Term | Description |
 |------|-------------|
-| **Aspect** | A class containing advice and pointcut definitions |
+| **Aspect** | Class containing advice and pointcut definitions |
 | **Advice** | Code executed at a specific point |
 | **Pointcut** | Expression matching where advice should apply |
 | **JoinPoint** | Actual point in code where advice executes |
+
+---
 
 ## Advice Types
 
@@ -27,25 +33,22 @@ AOP addresses cross-cutting concerns that span multiple layers:
 | `@After` | After method completes (always) | Cleanup |
 | `@AfterReturning` | After successful return | Log success |
 | `@AfterThrowing` | After exception thrown | Error handling |
-| `@Around` | Before and after execution | Timing, caching |
+| `@Around` | Before and after execution | Timing, caching, full control |
+
+---
 
 ## Pointcut Expressions
 
-```kotlin
-// Match all methods in a package
-@Pointcut("execution(* com.example.service.*.*(..))")
+| Pattern | Description |
+|---------|-------------|
+| `execution(* com.example.service.*.*(..))` | All methods in package |
+| `@annotation(com.example.Tracked)` | Methods with annotation |
+| `execution(* get*(..))` | Methods starting with "get" |
+| `within(com.example.service.*)` | All methods within package |
 
-// Match by annotation
-@Pointcut("@annotation(com.example.Tracked)")
+---
 
-// Match specific method names
-@Pointcut("execution(* get*(..))")
-
-// Combine conditions
-@Pointcut("execution(* com.example.service.*.*(..)) && @annotation(com.example.Async)")
-```
-
-## Practical Examples
+## Common Patterns
 
 ### Logging Aspect
 
@@ -53,7 +56,6 @@ AOP addresses cross-cutting concerns that span multiple layers:
 @Aspect
 @Component
 class LoggingAspect {
-
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Before("execution(* com.example.service.*.*(..))")
@@ -68,13 +70,12 @@ class LoggingAspect {
 }
 ```
 
-### Performance Monitoring Aspect
+### Performance Monitoring
 
 ```kotlin
 @Aspect
 @Component
 class PerformanceAspect {
-
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Around("execution(* com.example.service.*.*(..))")
@@ -90,7 +91,7 @@ class PerformanceAspect {
 }
 ```
 
-### Custom Annotation-Based Aspect
+### Custom Annotation Aspect
 
 ```kotlin
 @Target(AnnotationTarget.FUNCTION)
@@ -100,7 +101,6 @@ annotation class Timed
 @Aspect
 @Component
 class TimedAspect {
-
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Around("@annotation(com.example.Timed)")
@@ -123,30 +123,14 @@ class OrderService {
 }
 ```
 
+---
+
 ## Common Pitfalls
 
-### Self-Invocation
-
-Aspects don't apply when a method calls another method on the same object:
-
-```kotlin
-@Service
-class MyService {
-
-    @Timed
-    fun trackedMethod() { }
-
-    fun caller() {
-        trackedMethod()  // Aspect NOT applied - calling within same object
-    }
-}
-```
-
-**Solution:** Inject the service and call through the proxy, or refactor into separate beans.
-
-### Proxy Limitations
-
-- AOP only applies to **public methods** called through Spring proxy
-- **Private methods** cannot be advised
-- **Constructor calls** are not intercepted
-- **Static methods** cannot be advised
+| Pitfall | Problem | Solution |
+|---------|---------|----------|
+| Self-invocation | Aspect not applied for internal calls | Call through proxy or extract to separate bean |
+| Private methods | Cannot be advised | Use public methods |
+| Constructor calls | Not intercepted | Use `@PostConstruct` or factory methods |
+| Static methods | Cannot be advised | Convert to instance methods |
+| Final classes/methods | Cannot be proxied (CGLIB) | Remove `final` or use interface-based proxy |

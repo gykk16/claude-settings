@@ -10,6 +10,10 @@ Based on [Spring Framework Reference](https://docs.spring.io/spring-framework/re
 
 ## Topic Areas
 
+### [Annotation Order](annotations.md)
+
+Standard ordering for annotations: Spring/JPA first, then Lombok. Covers class, field, method, and parameter annotations.
+
 ### [Dependency Injection](dependency-injection.md)
 
 Learn Spring's DI container, constructor injection best practices, and how to write testable, loosely-coupled components.

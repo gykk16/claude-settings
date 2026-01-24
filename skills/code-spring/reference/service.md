@@ -1,114 +1,83 @@
 # Service Layer
 
-Services are Spring-managed beans responsible for orchestrating business logic, coordinating between repositories and external services, and managing transactions.
+Services orchestrate business logic, coordinate repositories and external services, and manage transactions.
 
-## Service Structure
+## When to Use
 
-```kotlin
-@Service
-class UserService(
-    private val userRepository: UserRepository,
-    private val emailService: EmailService,
-) {
-    private val logger = LoggerFactory.getLogger(javaClass)
+| Scenario | Service | Controller |
+|----------|---------|------------|
+| Business logic/rules | ✅ | ❌ |
+| Transaction boundaries | ✅ | ❌ |
+| Multi-repository operations | ✅ | ❌ |
+| External service calls | ✅ | ❌ |
+| HTTP request/response | ❌ | ✅ |
+| Input validation annotations | ❌ | ✅ |
 
-    fun createUser(request: CreateUserRequest): UserDto {
-        // Business logic here
-    }
-}
-```
+## Key Principles
 
-## Business Logic Organization
+> **Keep services focused.** Single responsibility. Thin controllers, rich services.
 
-Keep services focused with single responsibility:
+| Guideline | Description |
+|-----------|-------------|
+| **Single responsibility** | One service per domain concept |
+| **Business logic here** | Validation, rules, calculations |
+| **Coordinate, don't duplicate** | Orchestrate other services |
+| **Transaction per operation** | One @Transactional per use case |
 
-```kotlin
-@Service
-class OrderService(
-    private val orderRepository: OrderRepository,
-    private val inventoryService: InventoryService,
-) {
-    fun placeOrder(request: PlaceOrderRequest): OrderDto {
-        validateOrder(request)
-        val order = createOrder(request)
-        inventoryService.reserveItems(order.items)
-        return orderRepository.save(order).toDto()
-    }
+## Service Types
 
-    private fun validateOrder(request: PlaceOrderRequest) {
-        require(request.items.isNotEmpty()) { "Order must contain items" }
-        require(request.items.all { it.quantity > 0 }) { "Quantity must be positive" }
-    }
-
-    private fun createOrder(request: PlaceOrderRequest): Order {
-        return Order(
-            customerId = request.customerId,
-            items = request.items,
-            totalPrice = calculateTotal(request),
-        )
-    }
-
-    private fun calculateTotal(request: PlaceOrderRequest): BigDecimal {
-        return request.items.sumOf { it.price * it.quantity.toBigDecimal() }
-    }
-}
-```
-
-## Domain vs Application Services
-
-**Domain Service** - Pure business logic, no framework dependencies:
+| Type | Characteristics | Dependencies |
+|------|-----------------|--------------|
+| **Domain Service** | Pure business logic, no Spring annotations | None (POJO) |
+| **Application Service** | Orchestration, transactions, external calls | Repositories, other services |
 
 ```kotlin
+// Domain Service - Pure business logic
 class PricingDomainService {
-    fun calculateDiscount(amount: BigDecimal, customerTier: String): BigDecimal {
-        return when (customerTier) {
+    fun calculateDiscount(amount: BigDecimal, tier: String): BigDecimal =
+        when (tier) {
             "PREMIUM" -> amount * BigDecimal("0.90")
             "STANDARD" -> amount * BigDecimal("0.95")
             else -> amount
         }
-    }
 }
-```
 
-**Application Service** - Orchestrates repositories, transactions, external services:
-
-```kotlin
+// Application Service - Orchestration
 @Service
 class OrderApplicationService(
     private val orderRepository: OrderRepository,
-    private val pricingDomainService: PricingDomainService,
+    private val pricingService: PricingDomainService,
     private val paymentGateway: PaymentGateway,
 ) {
     @Transactional
-    fun processOrder(request: OrderRequest): OrderDto {
-        val order = orderRepository.findById(request.orderId)
-            ?: throw OrderNotFoundException(request.orderId)
-        val discountedPrice = pricingDomainService.calculateDiscount(order.amount, order.customerTier)
+    fun processOrder(orderId: Long): OrderDto {
+        val order = orderRepository.findById(orderId)
+            ?: throw OrderNotFoundException(orderId)
+        val discountedPrice = pricingService.calculateDiscount(order.amount, order.customerTier)
         paymentGateway.charge(discountedPrice)
         return orderRepository.save(order).toDto()
     }
 }
 ```
 
-## Error Handling in Services
+## Error Handling
 
-Use domain exceptions for business failures:
+Use domain exceptions for business rule violations:
 
 ```kotlin
 open class BusinessException(message: String) : RuntimeException(message)
 class OrderNotFoundException(id: Long) : BusinessException("Order not found: $id")
-class InsufficientInventoryException(sku: String) : BusinessException("Insufficient stock for $sku")
+class InsufficientInventoryException(sku: String) : BusinessException("Insufficient stock: $sku")
 
 @Service
 class OrderService(private val orderRepository: OrderRepository) {
 
-    fun getOrder(orderId: Long): OrderDto =
-        orderRepository.findById(orderId)?.toDto()
-            ?: throw OrderNotFoundException(orderId)
+    fun getOrder(id: Long): OrderDto =
+        orderRepository.findById(id)?.toDto()
+            ?: throw OrderNotFoundException(id)
 
-    fun cancelOrder(orderId: Long) {
-        val order = orderRepository.findById(orderId)
-            ?: throw OrderNotFoundException(orderId)
+    fun cancelOrder(id: Long) {
+        val order = orderRepository.findById(id) ?: throw OrderNotFoundException(id)
         require(!order.isShipped) { "Cannot cancel shipped orders" }
         orderRepository.save(order.copy(status = OrderStatus.CANCELLED))
     }
@@ -117,7 +86,7 @@ class OrderService(private val orderRepository: OrderRepository) {
 
 ## Service Composition
 
-Chain services cleanly without circular dependencies:
+Chain services without circular dependencies:
 
 ```kotlin
 @Service
@@ -125,88 +94,68 @@ class CheckoutService(
     private val cartService: CartService,
     private val paymentService: PaymentService,
     private val orderService: OrderService,
-    private val notificationService: NotificationService,
 ) {
     @Transactional
     fun checkout(cartId: Long): OrderDto {
         val cart = cartService.getCart(cartId)
         val payment = paymentService.processPayment(cart.total)
-        val order = orderService.createOrder(cart, payment)
-        notificationService.sendConfirmation(order.customerId)
-        return order.toDto()
+        return orderService.createOrder(cart, payment).toDto()
     }
 }
 ```
 
-## Logging Best Practices
+## Logging Guidelines
+
+| Level | Use Case |
+|-------|----------|
+| `INFO` | Normal operations (user created, order placed) |
+| `WARN` | Recoverable issues (duplicate email, validation failure) |
+| `ERROR` | Failures requiring attention (payment failed, DB error) |
 
 ```kotlin
 @Service
 class UserService(private val userRepository: UserRepository) {
-
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun createUser(request: CreateUserRequest): UserDto {
-        logger.info("Creating user with email: {}", request.email)
-
+        logger.info("Creating user: {}", request.email)
         return try {
-            val user = userRepository.save(User.from(request))
-            logger.info("User created successfully: {}", user.id)
-            user.toDto()
+            userRepository.save(User.from(request)).also {
+                logger.info("User created: {}", it.id)
+            }.toDto()
         } catch (e: DataIntegrityViolationException) {
-            logger.warn("Failed to create user - duplicate email: {}", request.email)
+            logger.warn("Duplicate email: {}", request.email)
             throw DuplicateEmailException(request.email)
         }
     }
 }
 ```
 
-**Log levels:**
-- `INFO`: Normal operations
-- `WARN`: Recoverable issues
-- `ERROR`: Failures requiring attention
+## Common Pitfalls
 
-## Testing Services
+| Pitfall | Problem | Solution |
+|---------|---------|----------|
+| Circular dependencies | Application startup failure | Extract shared logic, use events |
+| Business logic in controller | Hard to test, violates SRP | Move all business logic to service |
+| Transaction too large | Lock contention, connection exhaustion | Keep transactions small and focused |
+| External calls in transaction | Connection held during I/O | Move external calls outside transaction |
+| Missing null checks | NullPointerException | Use Kotlin nullable types, throw domain exceptions |
 
-Mock dependencies and focus on business logic:
+## Testing
 
 ```kotlin
 @ExtendWith(MockitoExtension::class)
 class OrderServiceTest {
 
-    @Mock
-    private lateinit var orderRepository: OrderRepository
-
-    @Mock
-    private lateinit var inventoryService: InventoryService
-
-    @InjectMocks
-    private lateinit var orderService: OrderService
+    @Mock lateinit var orderRepository: OrderRepository
+    @InjectMocks lateinit var orderService: OrderService
 
     @Test
-    fun `should place order successfully`() {
-        val request = PlaceOrderRequest(
-            customerId = 1,
-            items = listOf(OrderItem(sku = "SKU1", quantity = 2)),
-        )
-        val savedOrder = Order(id = 1, customerId = 1, items = request.items)
+    fun `should throw when order not found`() {
+        whenever(orderRepository.findById(any())).thenReturn(null)
 
-        whenever(inventoryService.reserveItems(any())).thenReturn(true)
-        whenever(orderRepository.save(any())).thenReturn(savedOrder)
-
-        val result = orderService.placeOrder(request)
-
-        assertEquals(1, result.id)
-        verify(inventoryService).reserveItems(request.items)
-        verify(orderRepository).save(any())
-    }
-
-    @Test
-    fun `should throw exception when order is empty`() {
-        val request = PlaceOrderRequest(customerId = 1, items = emptyList())
-
-        assertThrows<IllegalArgumentException> {
-            orderService.placeOrder(request)
+        assertThrows<OrderNotFoundException> {
+            orderService.getOrder(999L)
         }
     }
 }
