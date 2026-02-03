@@ -1,6 +1,6 @@
 ---
 name: mail-brief
-description: Fetches and summarizes Gmail messages as a formatted brief. Use when the user asks about their emails, inbox, mail for today, yesterday, this week, or last week.
+description: Fetches and summarizes Gmail and IMAP messages as a formatted brief. Use when the user asks about their emails, inbox, mail for today, yesterday, this week, or last week.
 ---
 
 # Mail Brief
@@ -9,7 +9,7 @@ $ARGUMENTS
 
 ## Instructions
 
-Provide a formatted mail brief by fetching messages from Gmail via the `gog` CLI.
+Provide a formatted mail brief by fetching messages from Gmail (via `gog` CLI) and IMAP accounts (via config file).
 
 ### Workflow
 
@@ -20,12 +20,15 @@ Provide a formatted mail brief by fetching messages from Gmail via the `gog` CLI
    - Last week: `--last-week`
    - Specific date: `--date YYYY-MM-DD`
 
-2. **Run the script** (accounts are auto-discovered if not specified):
+2. **Run the script**:
+   - Gmail accounts are auto-discovered via `gog auth list`
+   - IMAP accounts are loaded from `~/.claude/skills/mail-brief/accounts.json`
+
    ```bash
-   # Auto-discover accounts (no params needed):
+   # Auto-discover Gmail + load IMAP accounts:
    python3 ~/.claude/skills/mail-brief/scripts/mail_brief.py --today
 
-   # Or specify accounts explicitly:
+   # Or specify Gmail accounts explicitly (IMAP still auto-loaded):
    python3 ~/.claude/skills/mail-brief/scripts/mail_brief.py --personal=alice@gmail.com --work=bob@company.com --this-week
    ```
 
@@ -45,14 +48,16 @@ Provide a formatted mail brief by fetching messages from Gmail via the `gog` CLI
 | `--last-week` | No | Last week (Sun-Sat) |
 | `--date` | No | Specific date (YYYY-MM-DD) |
 
-When no `--personal` / `--work` is given, the script runs `gog auth list` and auto-classifies each account by domain (gmail.com, naver.com, etc. → personal; everything else → work).
+When no `--personal` / `--work` is given, the script runs `gog auth list` and auto-classifies each Gmail account by domain (gmail.com, naver.com, etc. → personal; everything else → work).
+
+IMAP accounts are always loaded from `~/.claude/skills/mail-brief/accounts.json` if the file exists.
 
 ### Output Format
 
-Messages from all accounts are **merged and grouped by date**, sorted by time (newest first within each day). Each message is prefixed with an account-type indicator and includes read/unread status:
+Messages from all accounts (Gmail and IMAP) are **merged and grouped by date**, sorted by time (newest first within each day). Each message is prefixed with an account-type indicator and includes read/unread status:
 
-- 🔵 = Personal account
-- 🟠 = Work account
+- 🔵 = Personal account (Gmail or IMAP)
+- 🟠 = Work account (Gmail or IMAP)
 
 Read/unread status indicators:
 

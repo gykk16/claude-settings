@@ -1,5 +1,6 @@
 # Claude Code local settings
 .claude/settings.local.json
+.mcp.json
 
 # OS generated files
 .DS_Store
@@ -28,3 +29,6 @@ __pycache__/
 # Compiled binaries
 skills/*/scripts/calendar-brief
 skills/*/scripts/mail-brief
+
+# Credentials and sensitive data
+skills/mail-brief/accounts.json

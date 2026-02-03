@@ -1,0 +1,23 @@
+{
+  "imap_accounts": [
+    {
+      "email": "user@company.com",
+      "type": "work",
+      "imap_server": "imap.company.com",
+      "imap_port": 993,
+      "use_ssl": true,
+      "username": "user@company.com",
+      "password": "your_app_password_here"
+    },
+    {
+      "email": "personal@fastmail.com",
+      "type": "personal",
+      "imap_server": "imap.fastmail.com",
+      "imap_port": 993,
+      "use_ssl": true,
+      "username": "personal@fastmail.com",
+      "password": "your_app_password_here"
+    }
+  ],
+  "_comment": "Copy this file to accounts.json and fill in your credentials. Common IMAP providers: Gmail (imap.gmail.com:993), Outlook (outlook.office365.com:993), Yahoo (imap.mail.yahoo.com:993), Fastmail (imap.fastmail.com:993), iCloud (imap.mail.me.com:993)"
+}
