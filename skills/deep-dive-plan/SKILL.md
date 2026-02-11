@@ -1,6 +1,6 @@
 ---
 name: deep-dive-plan
-description: Multi-agent collaborative planning system using Analyzer, Planner, and Validator agents for thorough pre-implementation analysis. Use when complex features need deep analysis before coding.
+description: Multi-agent collaborative planning system using parallel Analyzer team, specialized Planner, and parallel Validator team for thorough pre-implementation analysis. Use when complex features need deep analysis before coding.
 ---
 
 # Deep Dive Planning System
@@ -9,7 +9,7 @@ $ARGUMENTS
 
 ## Overview
 
-This skill orchestrates three specialized agents to produce comprehensive implementation plans before writing any code. The agents collaborate iteratively to ensure thorough analysis, solid planning, and validated strategies.
+This skill orchestrates specialized agent teams to produce comprehensive implementation plans before writing any code. Each phase uses parallel sub-agents for speed, while phases run sequentially to maintain data dependencies.
 
 **Use this skill when:**
 - Complex features requiring architectural decisions
@@ -23,277 +23,223 @@ This skill orchestrates three specialized agents to produce comprehensive implem
 - Well-understood patterns with clear implementation
 - Quick prototypes or experiments
 
-## Three-Agent System
+## Three-Phase System
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│  🔍 ANALYZER  →  📋 PLANNER  →  ✅ VALIDATOR               │
-│      ↓             ↓              ↓                         │
-│   Findings    →  Strategy   →  Approval/Reject             │
-│      ↑             ↑              ↓                         │
-│      └─────────────┴──────────────┘                        │
-│            Iterate until validated                          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│                                                                       │
+│  Phase 1: ANALYZE (parallel)                                          │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐              │
+│  │ 🔍 Explorer  │ │ 📊 Analyst   │ │ 🛡️ Risk Assessor │              │
+│  │   (haiku)    │ │   (opus)     │ │    (sonnet)      │              │
+│  └──────┬───────┘ └──────┬───────┘ └────────┬─────────┘              │
+│         └────────────────┼──────────────────┘                        │
+│                    Synthesize → Analysis Report                       │
+│                          ↓                                            │
+│  Phase 2: PLAN (sequential)                                           │
+│  ┌──────────────────────────────────┐                                │
+│  │ 📋 Planner (opus)                │                                │
+│  │ Strategy based on Analysis       │                                │
+│  └──────────────┬───────────────────┘                                │
+│                 ↓                                                      │
+│  Phase 3: VALIDATE (parallel)                                         │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐              │
+│  │ ✅ Verifier  │ │ 🧐 Critic    │ │ 📋 Quality Check │              │
+│  │   (sonnet)   │ │   (opus)     │ │    (sonnet)      │              │
+│  └──────┬───────┘ └──────┬───────┘ └────────┬─────────┘              │
+│         └────────────────┼──────────────────┘                        │
+│                    Synthesize → Validation Report                     │
+│                          ↓                                            │
+│              ✅ APPROVED / 🔄 ITERATE / ❌ REJECTED                   │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
-### 🔍 Analyzer Agent
+## Agent Type Resolution
 
-**Role**: Deep codebase exploration and current state analysis
+This skill uses specialized OMC agents when available, with built-in Claude Code fallbacks.
 
-**Responsibilities:**
-1. Explore existing code patterns and architecture
-2. Identify dependencies and integration points
-3. Discover constraints and technical debt
-4. Assess risks and potential blockers
-5. Map out impact areas
+**Detection**: Try the OMC type first. If the Task tool rejects the `subagent_type`, use the fallback.
 
-**Tools to use:**
-- Task agent with subagent_type=Explore for codebase exploration
-- Grep for pattern searching
-- Read for understanding existing implementations
-- Bash for running analysis commands (git log, dependency checks)
+| Role | OMC Type (preferred) | Fallback Type | Model |
+|------|---------------------|---------------|-------|
+| Explorer | `oh-my-claudecode:explore` | `Explore` | haiku |
+| Analyst | `oh-my-claudecode:analyst` | `general-purpose` | opus |
+| Risk Assessor | `oh-my-claudecode:security-reviewer` | `security-engineer` | sonnet |
+| Planner | `oh-my-claudecode:planner` | `general-purpose` | opus |
+| Verifier | `oh-my-claudecode:verifier` | `general-purpose` | sonnet |
+| Critic | `oh-my-claudecode:critic` | `general-purpose` | opus |
+| Quality Reviewer | `oh-my-claudecode:quality-reviewer` | `quality-engineer` | sonnet |
 
-**Output format:**
-```markdown
-## 🔍 Analysis Report
+> **Note**: OMC agents carry role-specific system prompts that improve output quality. Fallbacks work correctly but rely entirely on the prompt you provide, so include the full role description in the prompt when using fallbacks.
 
-### Current State
-[What exists now, architecture overview]
+## Phase 1: Analyzer Team
 
-### Dependencies
-- Internal: [Components/modules affected]
-- External: [Libraries, services, APIs]
+**Goal**: Deep codebase exploration and current state analysis using 3 parallel agents.
 
-### Constraints
-- Technical: [Language, framework limitations]
-- Business: [Performance, compliance requirements]
+### Team Composition
+
+| Agent | OMC Type | Fallback | Model | Responsibility |
+|-------|----------|----------|-------|----------------|
+| Explorer | `oh-my-claudecode:explore` | `Explore` | haiku | Codebase structure, file mapping, existing patterns |
+| Analyst | `oh-my-claudecode:analyst` | `general-purpose` | opus | Dependencies, constraints, integration points |
+| Risk Assessor | `oh-my-claudecode:security-reviewer` | `security-engineer` | sonnet | Risk identification, security concerns, impact areas |
+
+### How It Works
+
+1. **Launch 3 agents in parallel** using Task tool with `run_in_background: true`
+2. **Each agent works independently** on their focus area
+3. **Synthesize results** into a unified Analysis Report after all complete
+
+### Explorer Agent Prompt
+
+```
+You are the Explorer for deep-dive planning. Map the codebase structure for: [USER REQUEST]
+
+**Focus**:
+1. Map project structure and architecture patterns
+2. Find code locations relevant to the request (file paths + line numbers)
+3. Identify existing patterns similar to what's needed
+4. Document the technology stack and conventions
+
+**Output**:
+## Explorer Findings
+
+### Architecture Overview
+[Project structure, design patterns, component relationships]
+
+### Relevant Code Locations
+- `path/to/file.ts:45-89` - [What this code does]
+
+### Existing Patterns
+[Similar implementations found in codebase]
+
+### Technology Stack
+[Languages, frameworks, libraries in use]
+```
+
+### Analyst Agent Prompt
+
+```
+You are the Analyst for deep-dive planning. Analyze dependencies and constraints for: [USER REQUEST]
+
+**Focus**:
+1. Map internal dependencies (modules, components affected)
+2. Identify external dependencies (libraries, services, APIs)
+3. Discover technical constraints (language, framework, performance)
+4. Identify business constraints (timeline, compliance, compatibility)
+5. Flag open questions that need user input
+
+**Output**:
+## Analyst Findings
+
+### Internal Dependencies
+| Component | Relationship | Impact Level |
+|-----------|--------------|--------------|
+
+### External Dependencies
+| Package | Version | Purpose | Risk |
+|---------|---------|---------|------|
+
+### Technical Constraints
+[Language/framework limitations, performance requirements]
+
+### Business Constraints
+[Timeline, compliance, backwards compatibility needs]
+
+### Open Questions
+[Questions that need user input before planning]
+```
+
+### Risk Assessor Agent Prompt
+
+```
+You are the Risk Assessor for deep-dive planning. Identify risks and impact areas for: [USER REQUEST]
+
+**Focus**:
+1. Identify risks at all severity levels (Critical/High/Medium/Low)
+2. Map impact areas (files to modify, components affected, blast radius)
+3. Assess security implications
+4. Evaluate test coverage impact
+5. Find technical debt that may complicate the work
+
+**Output**:
+## Risk Assessment Findings
 
 ### Risks Identified
 - 🚨 Critical: [Blockers, breaking changes]
 - ⚠️ High: [Major technical debt, complex refactors]
-- 🔶 Medium: [Minor issues, edge cases]
+- 🔶 Medium: [Edge cases, testing challenges]
+- 🔵 Low: [Minor concerns]
 
 ### Impact Areas
-[Files, components, systems affected]
-```
-
-### 📋 Planner Agent
-
-**Role**: Strategic implementation planning based on analysis
-
-**Responsibilities:**
-1. Review Analyzer's findings
-2. Design implementation strategy
-3. Break down into phases and tasks
-4. Prioritize and sequence work
-5. Document architectural decisions
-6. Identify alternative approaches
-
-**Tools to use:**
-- Sequential thinking for complex reasoning
-- Read for reviewing Analyzer's report
-- Write for creating strategy documents
-
-**Output format:**
-```markdown
-## 📋 Implementation Strategy
-
-### Approach
-[High-level strategy and rationale]
-
-### Architectural Decisions
-1. **Decision**: [What was decided]
-   - **Rationale**: [Why this approach]
-   - **Trade-offs**: [Pros and cons]
-   - **Alternatives considered**: [Other options]
-
-### Implementation Phases
-
-#### Phase 1: [Foundation/Preparation]
-**Goal**: [What this phase achieves]
-**Tasks:**
-1. Task 1.1: [Specific deliverable]
-   - Actions: [Concrete steps]
-   - Files: [What to modify]
-   - Dependencies: [Prerequisites]
-2. Task 1.2: [Next deliverable]
-   ...
-
-#### Phase 2: [Core Implementation]
-...
-
-#### Phase 3: [Integration/Testing]
-...
-
-### Success Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-### Rollback Strategy
-[How to undo changes if needed]
-```
-
-### ✅ Validator Agent
-
-**Role**: Critical evaluation and risk assessment
-
-**Responsibilities:**
-1. Review Planner's strategy
-2. Verify against Analyzer's findings
-3. Check for missing considerations
-4. Assess feasibility and risks
-5. Approve or request revision with specific feedback
-
-**Tools to use:**
-- Read for reviewing both Analysis and Plan
-- Grep for verifying claims about codebase
-- Bash for running quick validation checks
-
-**Output format:**
-```markdown
-## ✅ Validation Report
-
-### Risk Assessment
-**Overall Risk Score**: [Low/Medium/High/Critical]
-
-**Risk Breakdown:**
-- **Technical Feasibility**: [1-5] - [Reasoning]
-- **Complexity**: [1-5] - [Reasoning]
-- **Dependencies**: [1-5] - [Reasoning]
-- **Time Estimate**: [1-5] - [Reasoning]
-- **Reversibility**: [1-5] - [Reasoning]
-
-### Validation Checklist
-- [ ] All risks from Analysis addressed in Plan
-- [ ] Dependencies properly sequenced
-- [ ] Success criteria are measurable
-- [ ] Rollback strategy is viable
-- [ ] Architecture decisions are justified
-- [ ] Alternative approaches considered
-- [ ] Impact areas all covered
-
-### Issues Found
-#### 🚨 Critical Issues (Must Fix)
-[Issues that make plan unexecutable]
-
-#### ⚠️ Major Concerns (Should Fix)
-[Significant gaps or risks]
-
-#### 🔶 Minor Suggestions (Nice to Have)
-[Improvements but not blockers]
-
-### Decision
-**Status**: [✅ APPROVED | ❌ REJECTED | 🔄 NEEDS REVISION]
-
-**Reasoning**: [Why this decision]
-
-**Required Actions**: [If rejected/needs revision, what must change]
-```
-
-## Workflow
-
-**CRITICAL: Multi-Agent Execution Rules**
-
-1. **ALWAYS use Task tool** - Never execute agent logic directly
-2. **Run Analyzer → Planner sequentially** - Planner needs Analyzer output
-3. **Validator runs after both** - Reviews both Analysis and Plan
-4. **Store agent outputs** - Save each agent's output to reference in next agent
-5. **Iterate based on Validator** - Only re-run failed agents, not all three
-
-### Step 1: Initialize
-
-Start by understanding the user's request and determining scope.
-
-```markdown
-**User Request**: [Summarize what user wants]
-**Scope**: [file | module | project | system]
-**Estimated Complexity**: [Low | Medium | High | Critical]
-```
-
-### Step 2: Launch Analyzer Agent
-
-**IMPORTANT**: Use the Task tool to invoke the Analyzer agent. Do NOT perform analysis yourself.
-
-Invoke the **🔍 Analyzer Agent**:
-
-```
-Use Task tool with subagent_type="general-purpose" and this prompt:
-
-"You are the Analyzer agent for deep-dive planning. Your job is to thoroughly explore and analyze the codebase for: [USER REQUEST]
-
-**Your Role**: Deep codebase exploration and current state analysis
-
-**Required Tasks**:
-1. Use Task agent with subagent_type=Explore to map project structure and patterns
-2. Use Grep to find relevant code patterns and dependencies
-3. Use Read to understand existing implementations
-4. Use Bash for analysis commands (git log, dependency checks)
-
-**Output Requirements**:
-Produce a comprehensive Analysis Report following this structure:
-
-## 🔍 Analysis Report
-
-### 1. Current State
-- Architecture overview
-- Relevant code locations with file paths and line numbers
-- Existing patterns similar to what's needed
-
-### 2. Dependencies
-- Internal: Components/modules affected
-- External: Libraries, services, APIs needed
-- Infrastructure: Database, environment, hosting
-
-### 3. Constraints
-- Technical: Language, framework, performance
-- Business: Timeline, compliance, compatibility
-
-### 4. Risks Identified
-- 🚨 Critical: Blockers, breaking changes
-- ⚠️ High: Major technical debt, complex refactors
-- 🔶 Medium: Edge cases, testing challenges
-- 🔵 Low: Minor concerns
-
-### 5. Impact Areas
 - Files to modify/create
 - Components affected (direct/indirect)
 - Test coverage impact
 
+### Security Implications
+[Authentication, authorization, data safety concerns]
+
+### Technical Debt Discovered
+[Existing issues that may complicate implementation]
+```
+
+### Synthesized Output Format
+
+After all 3 agents complete, synthesize into:
+
+```markdown
+## 🔍 Analysis Report
+
+### 1. Current State
+[From Explorer: architecture, code locations, patterns]
+
+### 2. Dependencies
+[From Analyst: internal, external, infrastructure]
+
+### 3. Constraints
+[From Analyst: technical, business]
+
+### 4. Risks Identified
+[From Risk Assessor: all severity levels]
+
+### 5. Impact Areas
+[From Risk Assessor: files, components, tests]
+
 ### 6. Recommendations for Planner
+[Synthesized from all three agents' findings]
 - Preferred approach
 - Approaches to avoid
 - Open questions for user
-
-Be thorough. Use Explore agent for codebase discovery. The Planner agent will use your findings to create the strategy."
 ```
 
-**Wait for Analyzer output before proceeding.**
+## Phase 2: Planner Agent
 
-### Step 3: Launch Planner Agent
+**Goal**: Strategic implementation planning based on analysis. Single specialized agent.
 
-**IMPORTANT**: Only run after Analyzer completes. Pass Analyzer's full output to Planner.
+### Agent Configuration
 
-Invoke the **📋 Planner Agent**:
+| Agent | OMC Type | Fallback | Model | Responsibility |
+|-------|----------|----------|-------|----------------|
+| Planner | `oh-my-claudecode:planner` | `general-purpose` | opus | Full implementation strategy |
+
+### Planner Agent Prompt
 
 ```
-Use Task tool with subagent_type="general-purpose" and this prompt:
+Use Task tool with subagent_type="oh-my-claudecode:planner" and model="opus":
 
-"You are the Planner agent for deep-dive planning. Review the Analyzer's findings and create a comprehensive implementation strategy.
+"You are the Planner for deep-dive planning. Review the Analyzer team's findings and create a comprehensive implementation strategy.
 
-**Your Role**: Strategic implementation planning based on analysis
-
-**Analyzer's Report**:
-[PASTE THE COMPLETE ANALYZER OUTPUT HERE]
+**Analyzer Team's Report**:
+[PASTE THE COMPLETE SYNTHESIZED ANALYSIS REPORT]
 
 **Required Tasks**:
-1. Review all findings from Analyzer thoroughly
+1. Review all findings from Analyzer team thoroughly
 2. Design implementation approach addressing all identified risks
 3. Break down work into logical phases (3-5 phases)
 4. Document architectural decisions with rationales
 5. Create detailed task breakdown for each phase
+6. Identify parallel execution opportunities within phases
 
 **Output Requirements**:
 Produce an Implementation Strategy following this structure:
@@ -315,6 +261,7 @@ For each phase (typically 3-5):
 - **Phase N: [Name]**
   - Goal: What this achieves
   - Tasks: Specific deliverables with actions
+  - Parallel Opportunities: Tasks that can run concurrently
   - Testing: How to verify
   - Completion Criteria: When phase is done
 
@@ -330,113 +277,278 @@ How to undo changes if needed
 ### 7. Risk Mitigation Plan
 Address each high/critical risk from Analysis
 
-Be specific. Include file paths, function names, concrete examples. The Validator will review your strategy against the Analysis."
+Be specific. Include file paths, function names, concrete examples. The Validator team will review your strategy against the Analysis."
 ```
 
 **Wait for Planner output before proceeding.**
 
-### Step 4: Launch Validator Agent
+## Phase 3: Validator Team
 
-**IMPORTANT**: Only run after both Analyzer and Planner complete. Validator reviews both outputs.
+**Goal**: Critical evaluation and risk assessment using 3 parallel agents.
 
-Invoke the **✅ Validator Agent**:
+### Team Composition
+
+| Agent | OMC Type | Fallback | Model | Responsibility |
+|-------|----------|----------|-------|----------------|
+| Verifier | `oh-my-claudecode:verifier` | `general-purpose` | sonnet | Cross-validate Plan against Analysis |
+| Critic | `oh-my-claudecode:critic` | `general-purpose` | opus | Challenge strategy, find flaws, assess alternatives |
+| Quality Reviewer | `oh-my-claudecode:quality-reviewer` | `quality-engineer` | sonnet | Feasibility, completeness, measurability |
+
+### How It Works
+
+1. **Launch 3 agents in parallel** using Task tool with `run_in_background: true`
+2. **Each agent reviews both Analysis and Plan** from their perspective
+3. **Synthesize results** into a unified Validation Report with final decision
+
+### Verifier Agent Prompt
 
 ```
-Use Task tool with subagent_type="general-purpose" and this prompt:
+You are the Verifier for deep-dive planning. Cross-validate the Plan against the Analysis.
 
-"You are the Validator agent for deep-dive planning. Review both the Analysis and the Plan critically to ensure feasibility and completeness.
+**Analyzer Team's Report**: [PASTE]
+**Planner's Strategy**: [PASTE]
 
-**Your Role**: Critical evaluation and risk assessment
+**Focus**:
+1. Are all risks from Analysis addressed in Plan?
+2. Are all dependencies mapped to specific tasks?
+3. Are all impact areas covered by phases?
+4. Spot-check claims: verify code references with Grep/Read
 
-**Analyzer's Report**:
-[PASTE COMPLETE ANALYZER OUTPUT]
+**Output**:
+## Verifier Findings
 
-**Planner's Strategy**:
-[PASTE COMPLETE PLANNER OUTPUT]
+### Cross-Validation
+- Risk [X]: ✅ Addressed in Phase Y / ⚠️ Partially / ❌ Missing
+- Dependency [X]: ✅ Mapped to Task Y / ❌ Not mapped
 
-**Required Tasks**:
-1. Verify all risks from Analysis are addressed in Plan
-2. Check that dependencies are properly sequenced
-3. Assess technical feasibility of proposed approach
-4. Calculate overall risk score (5 dimensions, 1-5 scale each)
-5. Identify critical issues, major concerns, minor suggestions
-6. Make final decision: APPROVED, NEEDS REVISION, or REJECTED
+### Spot Checks
+- Claim: "[quote]" → ✅ Verified / ❌ Incorrect
 
-**Output Requirements**:
-Produce a Validation Report following this structure:
+### Gaps Found
+[Any analysis findings not covered by the plan]
+```
 
+### Critic Agent Prompt
+
+```
+You are the Critic for deep-dive planning. Challenge the strategy and find flaws.
+
+**Analyzer Team's Report**: [PASTE]
+**Planner's Strategy**: [PASTE]
+
+**Focus**:
+1. Challenge architectural decisions - are alternatives properly considered?
+2. Find logical flaws in the approach
+3. Identify hidden assumptions
+4. Assess if the strategy is the simplest viable approach (YAGNI)
+5. Check for scope creep beyond user's request
+
+**Output**:
+## Critic Findings
+
+### Decisions Challenged
+- Decision [X]: [Challenge or agreement with reasoning]
+
+### Logical Flaws
+[Any contradictions or gaps in reasoning]
+
+### Hidden Assumptions
+[Unstated assumptions that could cause problems]
+
+### Scope Assessment
+[Is the plan right-sized for the request?]
+```
+
+### Quality Reviewer Agent Prompt
+
+```
+You are the Quality Reviewer for deep-dive planning. Assess feasibility and completeness.
+
+**Analyzer Team's Report**: [PASTE]
+**Planner's Strategy**: [PASTE]
+
+**Focus**:
+1. Rate risk dimensions (Technical Feasibility, Complexity, Dependencies, Time, Reversibility)
+2. Check success criteria are measurable
+3. Verify rollback strategy is viable
+4. Assess testing strategy adequacy
+5. Check error handling and monitoring coverage
+
+**Output**:
+## Quality Review Findings
+
+### Risk Scoring Matrix
+| Dimension | Score (1-5) | Reasoning |
+|-----------|-------------|-----------|
+| Technical Feasibility | | |
+| Complexity | | |
+| Dependencies | | |
+| Time Estimate | | |
+| Reversibility | | |
+| **OVERALL** | **[avg]** | **[Low/Medium/High/Critical]** |
+
+### Completeness Checklist
+- [ ] Testing strategy adequate
+- [ ] Error handling considered
+- [ ] Performance implications addressed
+- [ ] Security considerations included
+- [ ] Rollback strategy viable
+- [ ] Success criteria measurable
+
+### Issues Found
+- 🚨 Critical: [Must fix]
+- ⚠️ Major: [Should fix]
+- 🔶 Minor: [Nice to have]
+```
+
+### Synthesized Validation Decision
+
+After all 3 validator agents complete, synthesize into a final decision:
+
+```markdown
 ## ✅ Validation Report
 
 ### 1. Risk Assessment
-Risk scoring matrix (5 dimensions):
-- Technical Feasibility: [1-5] - [reasoning]
-- Complexity: [1-5] - [reasoning]
-- Dependencies: [1-5] - [reasoning]
-- Time Estimate: [1-5] - [reasoning]
-- Reversibility: [1-5] - [reasoning]
-- **Overall**: [average] - [Low/Medium/High/Critical]
+[From Quality Reviewer: risk scoring matrix]
 
-### 2. Validation Checklist
-- [ ] All risks from Analysis addressed
-- [ ] Dependencies properly sequenced
-- [ ] Success criteria measurable
-- [ ] Rollback strategy viable
-- [ ] Architectural decisions justified
-- [ ] Alternative approaches considered
+### 2. Cross-Validation Results
+[From Verifier: risk/dependency/impact coverage]
 
-### 3. Issues Found
-- 🚨 Critical Issues: [Must fix before approval]
-- ⚠️ Major Concerns: [Should fix]
-- 🔶 Minor Suggestions: [Nice to have]
+### 3. Strategic Assessment
+[From Critic: decision challenges, flaws, assumptions]
 
-### 4. Cross-Validation
-- Check: Are all risks from Analysis addressed in Plan?
-- Check: Are all dependencies mapped to tasks?
-- Check: Are all impact areas covered?
+### 4. Completeness Assessment
+[From Quality Reviewer: checklist results]
 
-### 5. Decision
+### 5. Issues Found
+[Consolidated from all three agents]
+- 🚨 Critical Issues (Must Fix)
+- ⚠️ Major Concerns (Should Fix)
+- 🔶 Minor Suggestions (Nice to Have)
+
+### 6. Decision
 **Status**: [✅ APPROVED | 🔄 NEEDS REVISION | ❌ REJECTED]
 
+**Decision Logic**:
+- If ANY critical issues → ❌ REJECTED or 🔄 NEEDS REVISION
+- If major concerns only → 🔄 NEEDS REVISION
+- If minor suggestions only → ✅ APPROVED
+
 **Reasoning**: [Why this decision]
-
-**Required Actions**: [If not approved, what must change and which agent should re-run]
-
-Be thorough and critical. Don't rubber-stamp. If something is missing or risky, flag it. Your job is to catch problems before implementation."
+**Required Actions**: [If not approved, what must change]
 ```
 
-**Wait for Validator output before proceeding.**
+## Workflow
+
+**CRITICAL: Execution Rules**
+
+1. **ALWAYS use Task tool** - Never execute agent logic directly
+2. **Parallel within phases** - Launch sub-agents in parallel within each phase
+3. **Sequential between phases** - Analyzer Team → Planner → Validator Team
+4. **Store all outputs** - Save each agent's output for reference in subsequent phases
+5. **Synthesize before handoff** - Combine parallel agent outputs before passing to next phase
+6. **Iterate based on Validator** - Only re-run failed agents, not all
+
+### Step 1: Initialize
+
+Start by understanding the user's request and determining scope.
+
+```markdown
+**User Request**: [Summarize what user wants]
+**Scope**: [file | module | project | system]
+**Estimated Complexity**: [Low | Medium | High | Critical]
+```
+
+### Step 2: Launch Analyzer Team (Parallel)
+
+**IMPORTANT**: Launch all 3 agents in parallel using Task tool. Do NOT perform analysis yourself.
+
+```
+Launch in parallel (use run_in_background: true for each):
+Use OMC types if available, otherwise use fallback types (see Agent Type Resolution).
+
+1. Task(subagent_type="oh-my-claudecode:explore",  # fallback: "Explore"
+        model="haiku",
+        prompt="[Explorer prompt with USER REQUEST]")
+
+2. Task(subagent_type="oh-my-claudecode:analyst",  # fallback: "general-purpose"
+        model="opus",
+        prompt="[Analyst prompt with USER REQUEST]")
+
+3. Task(subagent_type="oh-my-claudecode:security-reviewer",  # fallback: "security-engineer"
+        model="sonnet",
+        prompt="[Risk Assessor prompt with USER REQUEST]")
+```
+
+**Wait for ALL 3 agents to complete, then synthesize into unified Analysis Report.**
+
+If any agent's findings raise questions for the user, use **AskUserQuestion** before proceeding.
+
+### Step 3: Launch Planner Agent (Sequential)
+
+**IMPORTANT**: Only run after Analyzer Team completes and synthesis is done.
+
+```
+Task(subagent_type="oh-my-claudecode:planner",  # fallback: "general-purpose"
+     model="opus",
+     prompt="[Planner prompt with SYNTHESIZED ANALYSIS REPORT]")
+```
+
+**Wait for Planner output before proceeding.**
+
+### Step 4: Launch Validator Team (Parallel)
+
+**IMPORTANT**: Only run after Planner completes. All 3 validators need both Analysis and Plan.
+
+```
+Launch in parallel (use run_in_background: true for each):
+Use OMC types if available, otherwise use fallback types (see Agent Type Resolution).
+
+1. Task(subagent_type="oh-my-claudecode:verifier",  # fallback: "general-purpose"
+        model="sonnet",
+        prompt="[Verifier prompt with ANALYSIS + PLAN]")
+
+2. Task(subagent_type="oh-my-claudecode:critic",  # fallback: "general-purpose"
+        model="opus",
+        prompt="[Critic prompt with ANALYSIS + PLAN]")
+
+3. Task(subagent_type="oh-my-claudecode:quality-reviewer",  # fallback: "quality-engineer"
+        model="sonnet",
+        prompt="[Quality Reviewer prompt with ANALYSIS + PLAN]")
+```
+
+**Wait for ALL 3 agents to complete, then synthesize into Validation Report with decision.**
 
 ### Step 5: Iteration (If Needed)
 
-**Analyze Validator's Decision**:
+**Analyze Validator Team's Decision**:
 
-If Validator returns **✅ APPROVED**: Proceed to Step 6 (Finalization)
+If **✅ APPROVED**: Proceed to Step 6 (Finalization)
 
-If Validator returns **🔄 NEEDS REVISION** or **❌ REJECTED**:
+If **🔄 NEEDS REVISION** or **❌ REJECTED**:
 
-1. **Read Validator's feedback** carefully
-2. **Identify which agent(s) need to re-run**:
-   - Missing analysis / wrong assumptions → Re-run **Analyzer** with specific focus
+1. **Read consolidated feedback** from all 3 validators
+2. **Identify which phase needs re-run**:
+   - Missing analysis / wrong assumptions → Re-run specific **Analyzer agent(s)** (not full team)
    - Flawed strategy / poor decisions → Re-run **Planner** with feedback
    - Need user clarification → Use **AskUserQuestion** tool
 
-3. **Re-run appropriate agent(s)**:
-   - Include Validator's specific feedback in the agent prompt
+3. **Re-run only what's needed**:
+   - Include Validator team's specific feedback in the agent prompt
    - Reference original outputs: "Previous analysis showed X, but Validator identified gap Y"
-   - Only re-run agents that need changes (don't restart entire process)
+   - If only one Analyzer sub-area failed, re-run only that agent (not all 3)
 
-4. **Re-run Validator** after changes:
+4. **Re-run Validator Team** after changes:
    - Always validate again after any changes
-   - Use updated outputs from re-run agents
-   - Validator should see iteration history
+   - Pass updated outputs to all 3 validators
 
 **Iteration Limit**: Maximum 3 iterations. If still not approved after 3 rounds, ask user for guidance.
 
 ### Step 6: Finalization
 
-Once Validator returns **✅ APPROVED**:
+Once Validator Team returns **✅ APPROVED**:
 
-1. **Consolidate all three reports** into single comprehensive document
+1. **Consolidate all reports** into single comprehensive document
 2. **Save to claudedocs/**: `claudedocs/deep-dive-plan-[feature-name].md`
 3. **Create executive summary**: 2-3 sentences covering What, Why, How, Risk Level
 4. **Present to user**: Show summary with key decisions and recommendations
@@ -450,8 +562,9 @@ Save the final approved plan to `claudedocs/deep-dive-plan-[feature-name].md`:
 # Deep Dive Plan: [Feature Name]
 
 **Created**: [Date]
-**Status**: ✅ Validated and Approved
+**Status**: Validated and Approved
 **Overall Risk**: [Low/Medium/High/Critical]
+**Agents Used**: Explorer(haiku) + Analyst(opus) + Risk Assessor(sonnet) | Planner(opus) | Verifier(sonnet) + Critic(opus) + Quality Reviewer(sonnet)
 
 ---
 
@@ -460,18 +573,18 @@ Save the final approved plan to `claudedocs/deep-dive-plan-[feature-name].md`:
 
 ---
 
-## 🔍 Analysis Report
-[Full Analyzer output]
+## Analysis Report
+[Synthesized from Explorer + Analyst + Risk Assessor]
 
 ---
 
-## 📋 Implementation Strategy
+## Implementation Strategy
 [Full Planner output]
 
 ---
 
-## ✅ Validation Report
-[Full Validator output]
+## Validation Report
+[Synthesized from Verifier + Critic + Quality Reviewer]
 
 ---
 
@@ -488,25 +601,26 @@ Ready to implement? Use this plan with:
 ## Best Practices
 
 1. **Always use Task tool for agents**: Never perform agent work yourself - delegate to Task agents
-2. **Sequential execution**: Analyzer → Planner → Validator, never skip or parallelize agents
-3. **Pass complete outputs**: Each agent needs full context from previous agents
-4. **Let agents work independently**: Don't inject opinions between agent phases
-5. **Trust the process**: If Validator rejects, iterate - don't skip validation
-6. **Document everything**: All decisions, trade-offs, and rationale must be captured
-7. **Be thorough, not fast**: Deep dive means comprehensive, not quick
-8. **User approval required**: Always confirm final plan before implementation
-9. **One phase at a time**: When implementing, complete and validate each phase fully
+2. **Parallel within, sequential between**: Sub-agents run in parallel; phases run sequentially
+3. **Use `run_in_background: true`**: Launch parallel agents as background tasks for true concurrency
+4. **Synthesize before handoff**: Combine parallel outputs into coherent report before next phase
+5. **Right-size agent models**: haiku for exploration, opus for deep reasoning, sonnet for verification
+6. **Pass complete context**: Each phase needs full synthesized output from previous phase
+7. **Let agents work independently**: Don't inject opinions between agent phases
+8. **Trust the process**: If Validator Team rejects, iterate - don't skip validation
+9. **Re-run surgically**: On iteration, only re-run the specific agent(s) that need changes
+10. **User approval required**: Always confirm final plan before implementation
 
 ## Anti-Patterns to Avoid
 
-❌ **Doing agent work yourself**: Never perform analysis/planning/validation directly - always use Task tool
-❌ **Parallel agent execution**: Agents depend on each other's outputs - must run sequentially
-❌ **Incomplete context passing**: Each agent needs full output from previous agents
-❌ **Skipping Validator**: Never implement without validation approval
-❌ **Rushing to code**: This skill is about planning, not implementation
-❌ **Ignoring feedback**: Validator feedback must be addressed, not dismissed
-❌ **Over-simplifying**: Don't reduce complex problems to simple tasks
-❌ **Analysis paralysis**: If Validator approves, move forward - don't over-iterate
+- **Doing agent work yourself**: Never perform analysis/planning/validation directly - always delegate
+- **Running phases in parallel**: Planner needs Analysis; Validators need both - phases must be sequential
+- **Using general-purpose for everything**: Use specialized agent types for better results
+- **Skipping synthesis**: Don't pass raw parallel outputs directly - synthesize first
+- **Skipping Validator Team**: Never implement without validation approval
+- **Running full team on iteration**: If only one sub-area failed, re-run only that agent
+- **Rushing to code**: This skill is about planning, not implementation
+- **Analysis paralysis**: If Validator Team approves, move forward - don't over-iterate
 
 ## Integration with Other Skills
 
@@ -517,4 +631,4 @@ Ready to implement? Use this plan with:
 
 ---
 
-**Remember**: The goal is to have a validated, comprehensive plan that makes implementation straightforward and low-risk. Invest time in planning to save time in implementation.
+**Remember**: The goal is a validated, comprehensive plan that makes implementation straightforward and low-risk. Parallel agents speed up each phase without sacrificing thoroughness.
