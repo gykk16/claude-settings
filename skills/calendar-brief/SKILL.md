@@ -1,6 +1,6 @@
 ---
 name: calendar-brief
-description: Fetches and summarizes Google Calendar events as a formatted brief. Use when the user asks about their schedule, calendar, upcoming events, or meetings for today, tomorrow, this week, or next week.
+description: Fetches and summarizes Google Calendar and Naver Calendar events as a formatted brief. Use when the user asks about their schedule, calendar, upcoming events, or meetings for today, tomorrow, this week, or next week.
 ---
 
 # Calendar Brief
@@ -9,7 +9,7 @@ $ARGUMENTS
 
 ## Instructions
 
-Provide a formatted calendar brief by fetching events from Google Calendar via the `gog` CLI.
+Provide a formatted calendar brief by fetching events from Google Calendar via the `gog` CLI and optionally from Naver Calendar via CalDAV.
 
 ### Workflow
 
@@ -26,6 +26,11 @@ Provide a formatted calendar brief by fetching events from Google Calendar via t
 
    # Or specify accounts explicitly:
    python3 ~/.claude/skills/calendar-brief/scripts/calendar_brief.py --personal=alice@gmail.com --work=bob@company.com --this-week
+
+   # Include Naver calendar (requires NAVER_CALDAV_USER / NAVER_CALDAV_PASS env vars):
+   python3 ~/.claude/skills/calendar-brief/scripts/calendar_brief.py --naver --today
+
+   # Naver auto-discovery: if NAVER_CALDAV_USER is set, Naver is included automatically
    ```
 
 3. **Parse the JSON output** and format as a readable brief.
@@ -38,6 +43,7 @@ Provide a formatted calendar brief by fetching events from Google Calendar via t
 |-----------|----------|-------------|
 | `--personal` | No | Personal account email (auto-detected from common domains if omitted) |
 | `--work` | No | Work account email (auto-detected for non-personal domains if omitted) |
+| `--naver` | No | Include Naver CalDAV calendar events (auto-enabled if `NAVER_CALDAV_USER` env var is set) |
 | `--today` | No | Today's events (default) |
 | `--tomorrow` | No | Tomorrow's events |
 | `--this-week` | No | This week (Mon-Sun) |
@@ -45,11 +51,20 @@ Provide a formatted calendar brief by fetching events from Google Calendar via t
 
 When no `--personal` / `--work` is given, the script runs `gog auth list` and auto-classifies each account by domain (gmail.com, naver.com, etc. → personal; everything else → work).
 
+### Environment Variables (Naver CalDAV)
+
+| Variable | Description |
+|----------|-------------|
+| `NAVER_CALDAV_USER` | Naver ID (without @naver.com). If set, Naver calendar is auto-included even without `--naver` flag |
+| `NAVER_CALDAV_PASS` | Naver password or app-specific password |
+
+**Note**: `pip install caldav` is required for Naver CalDAV support.
+
 ### Output Format
 
 Events from all accounts are **merged and grouped by date**, sorted by start time. Each event is prefixed with an account-type indicator and suffixed with response status:
 
-- 🔵 = Personal account
+- 🔵 = Personal account (includes Naver)
 - 🟠 = Work account
 
 Response status indicators (shown in the last column):
@@ -91,7 +106,7 @@ Response status indicators (shown in the last column):
 
 ### Formatting Rules
 
-- **Account indicator**: 🔵 personal, 🟠 work — always shown as first column
+- **Account indicator**: 🔵 personal (includes Naver), 🟠 work — always shown as first column
 - **Response status**: ✅ accepted, ❌ declined, ❓ needsAction, 🤔 tentative, (empty) if no attendees — shown as last column (header: 응답)
 - **All-day events**: Show as `All day` in the Time column, sorted before timed events
 - **No location**: Show `-` in the Location column
@@ -100,7 +115,7 @@ Response status indicators (shown in the last column):
 - **Sorting**: Within each day, all-day events first, then by start time ascending
 - **Day-of-week**: Use correct day names (Mon/Tue/Wed/Thu/Fri/Sat/Sun or 월/화/수/목/금/토/일)
 - If one account errors, show the error message at the top and continue with the other account
-- Show a legend at the top: `🔵 개인 | 🟠 회사` (or `🔵 Personal | 🟠 Work` in English)
+- Show a legend at the top: `🔵 개인 | 🟠 회사` (or `🔵 Personal | 🟠 Work | 🟢 Naver` in English)
 
 ## Examples
 
